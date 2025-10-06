@@ -114,6 +114,7 @@ wrangler.toml.local
 
 # Warp AI cache
 .claude/
+.claude
 
 # Editor and IDE
 *.suo

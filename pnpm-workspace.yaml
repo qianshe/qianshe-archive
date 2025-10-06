@@ -1,0 +1,10 @@
+# pnpm workspace configuration
+# https://pnpm.io/pnpm-workspace_yaml
+
+packages:
+  # All packages in packages/ directory
+  - 'packages/*'
+  
+  # Exclude test directories
+  - '!**/test/**'
+  - '!**/tests/**'

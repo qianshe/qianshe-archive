@@ -1,0 +1,75 @@
+name = "qianshe-dashboard"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# 路由配置
+[env.production.routes]
+pattern = "dashboard.qianshe.top/*"
+zone_name = "qianshe.top"
+
+# 环境变量
+[vars]
+ENVIRONMENT = "development"
+SITE_URL = "http://localhost:8788"
+API_BASE_URL = "http://localhost:8788"
+JWT_SECRET = "dev-jwt-secret-change-in-production"
+ADMIN_EMAIL = "admin@qianshe.top"
+
+# 本地开发环境
+[env.development]
+vars = { ENVIRONMENT = "development" }
+
+[[env.development.d1_databases]]
+binding = "SHARED_DB"
+database_name = "qianshe-db-dev"
+database_id = "your-local-d1-id"
+
+# KV存储（用于会话管理和缓存）
+[[env.development.kv_namespaces]]
+binding = "SESSIONS_KV"
+id = "qianshe-sessions-dev"
+preview_id = "qianshe-sessions-dev-preview"
+
+[[env.development.kv_namespaces]]
+binding = "CACHE_KV"
+id = "qianshe-cache-dev"
+preview_id = "qianshe-cache-dev-preview"
+
+# R2存储（用于文件上传）
+[[env.development.r2_buckets]]
+binding = "UPLOADS_BUCKET"
+bucket_name = "qianshe-uploads-dev"
+
+# 生产环境
+[env.production]
+vars = {
+  ENVIRONMENT = "production",
+  SITE_URL = "https://dashboard.qianshe.top",
+  API_BASE_URL = "https://dashboard.qianshe.top",
+  JWT_SECRET = "your-production-jwt-secret",
+  ADMIN_EMAIL = "admin@qianshe.top"
+}
+
+kv_namespaces = [
+  { binding = "SESSIONS_KV", id = "qianshe-sessions-prod" },
+  { binding = "CACHE_KV", id = "qianshe-cache-prod" }
+]
+
+[[env.production.d1_databases]]
+binding = "SHARED_DB"
+database_name = "qianshe-db"
+database_id = "your-production-d1-id"
+
+[[env.production.r2_buckets]]
+binding = "UPLOADS_BUCKET"
+bucket_name = "qianshe-uploads"
+
+# 性能和限制配置
+[limits]
+cpu_ms = 50000
+memory = "128MB"
+
+# 构建配置
+[build]
+command = "cd ../dashboard-frontend && npm run build && cp -r dist/* ../dashboard-worker/static/"

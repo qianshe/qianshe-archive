@@ -19,20 +19,21 @@
 
 ```
 qianshe-archive/
-├── portfolio/                 # 作品集前端
-│   ├── frontend/             # React前端应用
-│   └── worker/               # Cloudflare Workers API
-├── dashboard/                # 管理后台
-│   ├── frontend/             # React管理界面
-│   └── worker/               # Cloudflare Workers API
-├── shared/                   # 共享代码
-│   └── types/                # TypeScript类型定义
-├── database/                 # 数据库相关
-│   └── migrations/           # 数据库迁移
-├── docs/                     # 项目文档
-├── scripts/                  # 工具脚本
-├── tests/                    # 测试文件
-└── .github/                  # GitHub配置
+├── packages/                      # Monorepo 包目录
+│   ├── portfolio-frontend/       # 作品集前端 (React)
+│   ├── portfolio-worker/         # 作品集 API (Cloudflare Workers)
+│   ├── dashboard-frontend/       # 管理后台前端 (React)
+│   ├── dashboard-worker/         # 管理后台 API (Cloudflare Workers)
+│   └── shared/                   # 共享代码
+│       └── types/                # TypeScript 类型定义
+├── database/                     # 数据库相关
+│   ├── schema.sql               # 数据库结构
+│   └── migrations/              # 数据库迁移
+├── docs/                         # 项目文档
+├── scripts/                      # 工具脚本
+├── tests/                        # 测试文件
+├── package.json                  # 根配置 (npm workspaces)
+└── README.md                     # 项目说明
 ```
 
 ## 🛠️ 技术栈
@@ -181,19 +182,16 @@ npx wrangler r2 bucket create qianshe-uploads
 
 5. **更新配置文件**
 
-- 更新 `portfolio/worker/wrangler.toml` 中的数据库 ID
-- 更新 `dashboard/worker/wrangler.toml` 中的数据库 ID
+- 更新 `packages/portfolio-worker/wrangler.toml` 中的数据库 ID
+- 更新 `packages/dashboard-worker/wrangler.toml` 中的数据库 ID
 
 6. **部署 Workers**
 
 ```bash
-# 部署展示端
-cd portfolio/worker
-npm run deploy
-
-# 部署管理端
-cd dashboard/worker
-npm run deploy
+# 使用根目录的快捷命令
+npm run deploy:all          # 部署所有
+npm run deploy:portfolio    # 只部署展示端
+npm run deploy:dashboard    # 只部署管理端
 ```
 
 ## 🛠️ 开发指南

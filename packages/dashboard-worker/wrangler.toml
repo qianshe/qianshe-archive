@@ -3,6 +3,10 @@ main = "src/index.ts"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
 
+# 静态文件服务配置
+[site]
+bucket = "./dist"
+
 # 路由配置
 [env.production.routes]
 pattern = "dashboard.qianshe.top/*"
@@ -70,6 +74,6 @@ bucket_name = "qianshe-uploads"
 cpu_ms = 50000
 memory = "128MB"
 
-# 构建配置
-[build]
-command = "cd ../dashboard-frontend && npm run build && cp -r dist/* ../dashboard-worker/static/"
+# 构建配置 - 前端已配置直接输出到 public 目录
+# [build]
+# command = "npm run build --workspace=dashboard-frontend"

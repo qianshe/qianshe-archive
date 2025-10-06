@@ -30,7 +30,7 @@ export default defineConfig({
     }
   },
   build: {
-    outDir: '../worker/dist',
+    outDir: '../portfolio-worker/dist',
     emptyOutDir: true,
     rollupOptions: {
       input: {

@@ -5,8 +5,7 @@ compatibility_flags = ["nodejs_compat"]
 
 # 静态资源配置
 [site]
-bucket = "./static"
-entry-point = "workers-site"
+bucket = "./dist"
 
 # 路由配置
 [env.production.routes]

@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Eye, EyeOff, Lock, User } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext';
 
 interface LoginFormData {
   username: string;
@@ -16,7 +15,6 @@ interface AdminLoginFormData {
 
 export const LoginPage: React.FC = () => {
   const { login, adminLogin, isLoading, error, clearError } = useAuth();
-  const { theme } = useTheme();
   const [loginType, setLoginType] = useState<'user' | 'admin'>('user');
   const [showPassword, setShowPassword] = useState(false);
 

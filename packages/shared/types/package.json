@@ -1,76 +1,22 @@
 {
   "name": "@qianshe/shared-types",
   "version": "1.0.0",
-  "description": "Shared TypeScript types for Qianshe Project",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "description": "Minimal shared TypeScript types for Qianshe Project",
+  "type": "module",
+  "main": "index.ts",
+  "types": "index.ts",
+  "private": true,
   "scripts": {
-    "build": "tsc",
-    "build:watch": "tsc --watch",
-    "type-check": "tsc --noEmit",
-    "type-coverage": "type-coverage --detail --strict",
-    "lint": "eslint src --ext .ts",
-    "lint:fix": "eslint src --ext .ts --fix",
-    "format": "prettier --write \"**/*.ts\"",
-    "format:check": "prettier --check \"**/*.ts\"",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "clean": "rimraf dist",
-    "docs": "typedoc --out docs index.ts",
-    "prepublishOnly": "npm run build",
-    "validate": "npm run type-check && npm run lint && npm run test"
+    "type-check": "tsc --noEmit"
   },
   "keywords": [
     "typescript",
     "types",
-    "api",
-    "models",
-    "validation",
-    "shared",
-    "qianshe"
+    "shared"
   ],
   "author": "Qianshe Team",
   "license": "MIT",
-  "devDependencies": {
-    "@types/jest": "^29.5.0",
-    "@types/node": "^18.15.0",
-    "@typescript-eslint/eslint-plugin": "^5.57.0",
-    "@typescript-eslint/parser": "^5.57.0",
-    "eslint": "^8.37.0",
-    "jest": "^29.5.0",
-    "prettier": "^2.8.7",
-    "rimraf": "^5.0.0",
-    "ts-jest": "^29.1.0",
-    "ts-node": "^10.9.1",
-    "type-coverage": "^2.26.0",
-    "typedoc": "^0.24.0",
-    "typescript": "^5.0.0"
-  },
-  "dependencies": {
-    "zod": "^3.21.4"
-  },
-  "peerDependencies": {
-    "typescript": ">=4.5.0"
-  },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
-  "typeCoverage": {
-    "atLeast": 99,
-    "strict": true,
-    "detail": true,
-    "ignoreCatch": true,
-    "ignoreFiles": [
-      "**/*.test.ts",
-      "**/*.spec.ts"
-    ]
-  },
   "engines": {
-    "node": ">=16.0.0"
-  },
-  "publishConfig": {
-    "access": "public"
+    "node": ">=18.0.0"
   }
 }

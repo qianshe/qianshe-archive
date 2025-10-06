@@ -1,9 +1,9 @@
+/* 导入 Markdown 样式 - 必须在最前面 */
+@import './markdown.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* 导入 Markdown 样式 */
-@import './markdown.css';
 
 /* 自定义CSS变量 */
 :root {

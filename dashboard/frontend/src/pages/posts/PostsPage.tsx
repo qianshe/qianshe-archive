@@ -1,0 +1,18 @@
+import React from 'react';
+
+export const PostsPage: React.FC = () => {
+  return (
+    <div className="container-responsive py-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">文章管理</h1>
+        <p className="mt-2 text-gray-600 dark:text-gray-400">管理您的博客文章</p>
+      </div>
+
+      <div className="card">
+        <div className="card-body">
+          <p className="text-gray-600 dark:text-gray-400">文章管理功能正在开发中...</p>
+        </div>
+      </div>
+    </div>
+  );
+};

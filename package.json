@@ -1,0 +1,63 @@
+{
+  "name": "qianshe-archive",
+  "version": "1.0.0",
+  "description": "谦舍个人博客与作品集系统",
+  "type": "module",
+  "main": "deploy.js",
+  "scripts": {
+    "install:all": "node -e \"const {execSync} = require('child_process'); ['portfolio/frontend', 'portfolio/worker', 'dashboard/frontend', 'dashboard/worker'].forEach(dir => { console.log('Installing in', dir); execSync('npm install', {cwd: dir, stdio: 'inherit'}); })\"",
+    "build:all": "npm run build:portfolio && npm run build:dashboard",
+    "build:portfolio": "cd portfolio/worker && npm run build:frontend",
+    "build:dashboard": "cd dashboard/worker && npm run build:frontend",
+    "dev:portfolio": "cd portfolio/worker && npm run dev",
+    "dev:dashboard": "cd dashboard/worker && npm run dev",
+    "deploy": "node deploy.js",
+    "deploy:portfolio": "node deploy.js --portfolio",
+    "deploy:dashboard": "node deploy.js --dashboard",
+    "init:db": "cd database && node init-db.js",
+    "migrate": "cd database && npx wrangler d1 execute qianshe-db --file=migrations/001_initial_data.sql",
+    "logs:portfolio": "cd portfolio/worker && npx wrangler tail",
+    "logs:dashboard": "cd dashboard/worker && npx wrangler tail",
+    "clean": "node -e \"const {execSync} = require('child_process'); execSync('rm -rf portfolio/worker/static dashboard/worker/static node_modules portfolio/frontend/node_modules portfolio/worker/node_modules dashboard/frontend/node_modules dashboard/worker/node_modules', {stdio: 'inherit'});\"",
+    "setup": "npm run install:all && npm run init:db",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint:all": "npm run lint && npm run format:check",
+    "type-check-all": "node scripts/type-check-all.js",
+    "build:check": "node scripts/build-check.js",
+    "test": "node scripts/run-tests.js",
+    "pre-commit": "npm run lint:all && npm run type-check-all && npm run test",
+    "quality-check": "npm run lint:all && npm run type-check-all && npm run build:check && npm run test",
+    "quality:monitor": "node scripts/quality-monitor.js",
+    "quality:trend": "node scripts/generate-quality-trend.js",
+    "quality:dashboard": "node scripts/create-quality-dashboard.js",
+    "setup:pre-commit": "node scripts/setup-pre-commit.js"
+  },
+  "keywords": [
+    "blog",
+    "portfolio",
+    "cloudflare-workers",
+    "d1",
+    "react",
+    "typescript"
+  ],
+  "author": "qainshe",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20231025.0",
+    "@typescript-eslint/eslint-plugin": "^8.45.0",
+    "@typescript-eslint/parser": "^8.45.0",
+    "eslint": "^9.37.0",
+    "eslint-plugin-react": "^7.33.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0",
+    "wrangler": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

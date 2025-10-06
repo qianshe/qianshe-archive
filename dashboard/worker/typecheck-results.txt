@@ -1,0 +1,236 @@
+
+> dashboard-worker@1.0.0 type-check
+> tsc --noEmit
+
+src/handlers/settings.ts(35,33): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(entries: Iterable<readonly [PropertyKey, any]>): { [k: string]: any; }', gave the following error.
+    Argument of type 'Record<string, string[]>' is not assignable to parameter of type 'Iterable<readonly [PropertyKey, any]>'.
+      Property '[Symbol.iterator]' is missing in type 'Record<string, string[]>' but required in type 'Iterable<readonly [PropertyKey, any]>'.
+  Overload 2 of 2, '(entries: Iterable<readonly any[]>): any', gave the following error.
+    Argument of type 'Record<string, string[]>' is not assignable to parameter of type 'Iterable<readonly any[]>'.
+      Property '[Symbol.iterator]' is missing in type 'Record<string, string[]>' but required in type 'Iterable<readonly any[]>'.
+src/handlers/settings.ts(37,24): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(key: never): unknown', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(key: never): never', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+src/handlers/settings.ts(43,35): error TS2339: Property 'role' does not exist on type 'unknown'.
+src/handlers/settings.ts(101,22): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(key: never): unknown', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(key: never): never', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+src/handlers/settings.ts(119,12): error TS2339: Property 'role' does not exist on type 'unknown'.
+src/handlers/settings.ts(147,41): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'UserRole'.
+src/handlers/settings.ts(262,43): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'UserRole'.
+src/handlers/settings.ts(374,44): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'UserRole'.
+src/handlers/settings.ts(446,42): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'UserRole'.
+src/handlers/upload.ts(3,10): error TS2305: Module '"../middleware/auth"' has no exported member 'createError'.
+src/handlers/upload.ts(45,33): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(entries: Iterable<readonly [PropertyKey, any]>): { [k: string]: any; }', gave the following error.
+    Argument of type 'Record<string, string[]>' is not assignable to parameter of type 'Iterable<readonly [PropertyKey, any]>'.
+      Property '[Symbol.iterator]' is missing in type 'Record<string, string[]>' but required in type 'Iterable<readonly [PropertyKey, any]>'.
+  Overload 2 of 2, '(entries: Iterable<readonly any[]>): any', gave the following error.
+    Argument of type 'Record<string, string[]>' is not assignable to parameter of type 'Iterable<readonly any[]>'.
+      Property '[Symbol.iterator]' is missing in type 'Record<string, string[]>' but required in type 'Iterable<readonly any[]>'.
+src/handlers/upload.ts(47,24): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(key: never): unknown', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(key: never): never', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+src/handlers/upload.ts(54,14): error TS2339: Property 'role' does not exist on type 'unknown'.
+src/handlers/upload.ts(56,24): error TS2339: Property 'userId' does not exist on type 'unknown'.
+src/handlers/upload.ts(126,24): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(key: never): unknown', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(key: never): never', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+src/handlers/upload.ts(134,18): error TS2352: Conversion of type 'string' to type 'File' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+src/handlers/upload.ts(179,14): error TS2339: Property 'userId' does not exist on type 'unknown'.
+src/handlers/upload.ts(223,22): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(key: never): unknown', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(key: never): never', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+src/handlers/upload.ts(248,10): error TS2339: Property 'role' does not exist on type 'unknown'.
+src/handlers/upload.ts(249,40): error TS2339: Property 'userId' does not exist on type 'unknown'.
+src/handlers/upload.ts(265,24): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(key: never): unknown', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(key: never): never', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+src/handlers/upload.ts(293,14): error TS2339: Property 'role' does not exist on type 'unknown'.
+src/handlers/upload.ts(293,77): error TS2339: Property 'userId' does not exist on type 'unknown'.
+src/handlers/upload.ts(355,22): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(key: never): unknown', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(key: never): never', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+src/handlers/upload.ts(375,12): error TS2339: Property 'role' does not exist on type 'unknown'.
+src/handlers/upload.ts(375,75): error TS2339: Property 'userId' does not exist on type 'unknown'.
+src/handlers/upload.ts(407,24): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(key: never): unknown', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(key: never): never', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+src/handlers/upload.ts(426,18): error TS2339: Property 'role' does not exist on type 'unknown'.
+src/handlers/upload.ts(426,73): error TS2339: Property 'userId' does not exist on type 'unknown'.
+src/handlers/upload.ts(461,22): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(key: never): unknown', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(key: never): never', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+src/handlers/upload.ts(467,12): error TS2339: Property 'role' does not exist on type 'unknown'.
+src/handlers/upload.ts(469,20): error TS2339: Property 'userId' does not exist on type 'unknown'.
+src/handlers/users.ts(4,10): error TS2305: Module '"../middleware/auth"' has no exported member 'createError'.
+src/handlers/users.ts(46,33): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'UserRole'.
+src/handlers/users.ts(48,56): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(entries: Iterable<readonly [PropertyKey, any]>): { [k: string]: any; }', gave the following error.
+    Argument of type 'Record<string, string[]>' is not assignable to parameter of type 'Iterable<readonly [PropertyKey, any]>'.
+      Property '[Symbol.iterator]' is missing in type 'Record<string, string[]>' but required in type 'Iterable<readonly [PropertyKey, any]>'.
+  Overload 2 of 2, '(entries: Iterable<readonly any[]>): any', gave the following error.
+    Argument of type 'Record<string, string[]>' is not assignable to parameter of type 'Iterable<readonly any[]>'.
+      Property '[Symbol.iterator]' is missing in type 'Record<string, string[]>' but required in type 'Iterable<readonly any[]>'.
+src/handlers/users.ts(120,29): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(key: never): unknown', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(key: never): never', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+src/handlers/users.ts(127,26): error TS2339: Property 'userId' does not exist on type 'unknown'.
+src/handlers/users.ts(127,48): error TS2339: Property 'role' does not exist on type 'unknown'.
+src/handlers/users.ts(154,34): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'UserRole'.
+src/handlers/users.ts(233,31): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(key: never): unknown', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(key: never): never', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+src/handlers/users.ts(242,28): error TS2339: Property 'userId' does not exist on type 'unknown'.
+src/handlers/users.ts(242,50): error TS2339: Property 'role' does not exist on type 'unknown'.
+src/handlers/users.ts(247,21): error TS2339: Property 'role' does not exist on type 'unknown'.
+src/handlers/users.ts(376,39): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'UserRole'.
+src/handlers/users.ts(378,29): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(key: never): unknown', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(key: never): never', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+src/handlers/users.ts(385,26): error TS2339: Property 'userId' does not exist on type 'unknown'.
+src/handlers/users.ts(418,47): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'UserRole'.
+src/index.ts(12,10): error TS2305: Module '"./middleware/auth"' has no exported member 'authMiddleware'.
+src/index.ts(70,9): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(key: never, value: unknown): void', gave the following error.
+    Argument of type '"dbOptimizer"' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(key: never, value: never): void', gave the following error.
+    Argument of type '"dbOptimizer"' is not assignable to parameter of type 'never'.
+src/index.ts(135,67): error TS2345: Argument of type 'Context<{ Bindings: Bindings; }, "/api/analytics/track", BlankInput>' is not assignable to parameter of type 'ExecutionContext'.
+  Type 'Context<{ Bindings: Bindings; }, "/api/analytics/track", BlankInput>' is missing the following properties from type 'ExecutionContext': waitUntil, passThroughOnException, props
+src/index.ts(166,22): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(key: never): unknown', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(key: never): never', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+src/index.ts(167,21): error TS2339: Property 'role' does not exist on type 'unknown'.
+src/index.ts(183,22): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(key: never): unknown', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(key: never): never', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+src/index.ts(185,21): error TS2339: Property 'role' does not exist on type 'unknown'.
+src/index.ts(222,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(key: never): unknown', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(key: never): never', gave the following error.
+    Argument of type '"user"' is not assignable to parameter of type 'never'.
+src/index.ts(222,28): error TS2339: Property 'id' does not exist on type 'unknown'.
+src/middleware/auth.ts(131,7): error TS2353: Object literal may only specify known properties, and 'moderator' does not exist in type 'Record<UserRole, PermissionCheck[]>'.
+src/middleware/database.ts(116,9): error TS2345: Argument of type 'D1PreparedStatement' is not assignable to parameter of type 'Promise<unknown>'.
+  Type 'D1PreparedStatement' is missing the following properties from type 'Promise<unknown>': then, catch, finally, [Symbol.toStringTag]
+src/middleware/database.ts(124,32): error TS2339: Property 'first' does not exist on type 'unknown'.
+src/middleware/database.ts(126,32): error TS2339: Property 'first' does not exist on type 'unknown'.
+src/middleware/database.ts(128,32): error TS2339: Property 'all' does not exist on type 'unknown'.
+src/middleware/database.ts(132,30): error TS2339: Property 'run' does not exist on type 'unknown'.
+src/middleware/errorHandler.ts(32,7): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(object: { details: any; success: false; error: string; code: string; }, status?: ContentfulStatusCode, headers?: HeaderRecord): JSONRespondReturn<{ details: any; success: false; error: string; code: string; }, ContentfulStatusCode>', gave the following error.
+    Argument of type 'number' is not assignable to parameter of type 'ContentfulStatusCode'.
+  Overload 2 of 2, '(object: { details: any; success: false; error: string; code: string; }, init?: ResponseOrInit<ContentfulStatusCode>): JSONRespondReturn<{ details: any; success: false; error: string; code: string; }, ContentfulStatusCode>', gave the following error.
+    Argument of type 'number' is not assignable to parameter of type 'ResponseOrInit<ContentfulStatusCode>'.
+src/services/monitoring.ts(69,3): error TS2416: Property 'recordError' in type 'MonitoringService' is not assignable to the same property in base type 'MonitoringService'.
+  Type '(error: string | Error, context: { url: string; method: string; userId?: number; userAgent?: string; ip?: string; tags?: Record<string, string>; }) => void' is not assignable to type '(error: Omit<ErrorMetric, "id" | "fingerprint" | "occurrences" | "firstSeen" | "lastSeen">) => void'.
+    Target signature provides too few arguments. Expected 2 or more, but got 1.
+src/services/monitoring.ts(128,3): error TS2416: Property 'recordSystemMetrics' in type 'MonitoringService' is not assignable to the same property in base type 'MonitoringService'.
+  Type '(metrics: Partial<SystemMetrics>) => void' is not assignable to type '(metrics: Omit<SystemMetric, "timestamp">) => void'.
+    Types of parameters 'metrics' and 'metrics' are incompatible.
+      Type 'Omit<SystemMetric, "timestamp">' is not assignable to type 'Partial<SystemMetrics>'.
+        Types of property 'cpuUsage' are incompatible.
+          Type '{ user: number; system: number; idle: number; total: number; }' is not assignable to type 'number'.
+src/services/monitoring.ts(201,18): error TS2352: Conversion of type '{ timestamp: number; cpuUsage: number; memoryUsage: number; diskUsage: number; network: { bytesIn: number; bytesOut: number; packetsIn: number; packetsOut: number; connections: number; activeConnections: number; }; }' to type 'SystemMetric' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Types of property 'cpuUsage' are incompatible.
+    Type 'number' is not comparable to type '{ user: number; system: number; idle: number; total: number; }'.
+src/services/monitoring.ts(332,9): error TS2393: Duplicate function implementation.
+src/services/monitoring.ts(715,11): error TS2393: Duplicate function implementation.
+src/types/auth.ts(2,156): error TS6059: File 'D:/myProject/top.qianshe/qiansheArchive/shared/types/auth.ts' is not under 'rootDir' 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker'. 'rootDir' is expected to contain all source files.
+  The file is in the program because:
+    Imported via '@shared/types/auth' from file 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker/src/types/auth.ts'
+    Imported via '@shared/types/auth' from file 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker/src/types/management.ts'
+    Imported via '@shared/types/auth' from file 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker/src/types/index.ts'
+    Imported via '@shared/types/auth' from file 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker/src/handlers/auth.ts'
+    Imported via '@shared/types/auth' from file 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker/src/middleware/auth.ts'
+src/types/auth.ts(5,18): error TS2430: Interface 'AdminUser' incorrectly extends interface 'Omit<User, "role">'.
+  Property 'username' is optional in type 'AdminUser' but required in type 'Omit<User, "role">'.
+src/types/index.ts(7,15): error TS6059: File 'D:/myProject/top.qianshe/qiansheArchive/shared/types/environment.ts' is not under 'rootDir' 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker'. 'rootDir' is expected to contain all source files.
+src/types/index.ts(8,1): error TS2308: Module '@shared/types/api' has already exported a member named 'HealthCheck'. Consider explicitly re-exporting to resolve the ambiguity.
+src/types/index.ts(8,15): error TS6059: File 'D:/myProject/top.qianshe/qiansheArchive/shared/types/monitoring.ts' is not under 'rootDir' 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker'. 'rootDir' is expected to contain all source files.
+  The file is in the program because:
+    Imported via '@shared/types/monitoring' from file 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker/src/types/index.ts'
+    Imported via '@shared/types/monitoring' from file 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker/src/services/monitoring.ts'
+src/types/index.ts(9,15): error TS6059: File 'D:/myProject/top.qianshe/qiansheArchive/shared/types/database.ts' is not under 'rootDir' 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker'. 'rootDir' is expected to contain all source files.
+src/types/index.ts(10,1): error TS2308: Module './auth' has already exported a member named 'ChangePasswordRequest'. Consider explicitly re-exporting to resolve the ambiguity.
+src/types/index.ts(10,1): error TS2308: Module './auth' has already exported a member named 'JWTPayload'. Consider explicitly re-exporting to resolve the ambiguity.
+src/types/index.ts(10,1): error TS2308: Module './auth' has already exported a member named 'LoginRequest'. Consider explicitly re-exporting to resolve the ambiguity.
+src/types/index.ts(11,15): error TS6059: File 'D:/myProject/top.qianshe/qiansheArchive/shared/types/cache.ts' is not under 'rootDir' 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker'. 'rootDir' is expected to contain all source files.
+src/types/index.ts(12,1): error TS2308: Module '@shared/types/api' has already exported a member named 'ApiResponse'. Consider explicitly re-exporting to resolve the ambiguity.
+src/types/index.ts(12,1): error TS2308: Module '@shared/types/api' has already exported a member named 'ErrorResponse'. Consider explicitly re-exporting to resolve the ambiguity.
+src/types/index.ts(12,1): error TS2308: Module '@shared/types/cache' has already exported a member named 'CacheOptions'. Consider explicitly re-exporting to resolve the ambiguity.
+src/types/index.ts(12,15): error TS6059: File 'D:/myProject/top.qianshe/qiansheArchive/shared/types/utils.ts' is not under 'rootDir' 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker'. 'rootDir' is expected to contain all source files.
+src/types/index.ts(13,15): error TS6059: File 'D:/myProject/top.qianshe/qiansheArchive/shared/types/workers.ts' is not under 'rootDir' 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker'. 'rootDir' is expected to contain all source files.
+src/types/index.ts(14,1): error TS2308: Module './management' has already exported a member named 'BlogQueryParams'. Consider explicitly re-exporting to resolve the ambiguity.
+src/types/index.ts(14,1): error TS2308: Module '@shared/types/auth' has already exported a member named 'SocialLinks'. Consider explicitly re-exporting to resolve the ambiguity.
+src/types/index.ts(15,1): error TS2308: Module '@shared/types/auth' has already exported a member named 'Permission'. Consider explicitly re-exporting to resolve the ambiguity.
+src/types/index.ts(15,1): error TS2308: Module '@shared/types/blog' has already exported a member named 'Author'. Consider explicitly re-exporting to resolve the ambiguity.
+src/types/index.ts(15,15): error TS6059: File 'D:/myProject/top.qianshe/qiansheArchive/shared/types/project.ts' is not under 'rootDir' 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker'. 'rootDir' is expected to contain all source files.
+src/types/index.ts(16,1): error TS2308: Module './management' has already exported a member named 'ExportTask'. Consider explicitly re-exporting to resolve the ambiguity.
+src/types/index.ts(16,1): error TS2308: Module './management' has already exported a member named 'MediaFile'. Consider explicitly re-exporting to resolve the ambiguity.
+src/types/index.ts(16,1): error TS2308: Module '@shared/types/auth' has already exported a member named 'Permission'. Consider explicitly re-exporting to resolve the ambiguity.
+src/types/index.ts(16,1): error TS2308: Module '@shared/types/auth' has already exported a member named 'User'. Consider explicitly re-exporting to resolve the ambiguity.
+src/types/index.ts(16,1): error TS2308: Module '@shared/types/auth' has already exported a member named 'UserPreferences'. Consider explicitly re-exporting to resolve the ambiguity.
+src/types/index.ts(16,1): error TS2308: Module '@shared/types/auth' has already exported a member named 'UserRole'. Consider explicitly re-exporting to resolve the ambiguity.
+src/types/index.ts(16,1): error TS2308: Module '@shared/types/blog' has already exported a member named 'BlogCategory'. Consider explicitly re-exporting to resolve the ambiguity.
+src/types/index.ts(16,1): error TS2308: Module '@shared/types/blog' has already exported a member named 'BlogPost'. Consider explicitly re-exporting to resolve the ambiguity.
+src/types/index.ts(16,1): error TS2308: Module '@shared/types/project' has already exported a member named 'Project'. Consider explicitly re-exporting to resolve the ambiguity.
+src/types/index.ts(16,15): error TS6059: File 'D:/myProject/top.qianshe/qiansheArchive/shared/types/models.ts' is not under 'rootDir' 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker'. 'rootDir' is expected to contain all source files.
+src/types/management.ts(2,75): error TS6059: File 'D:/myProject/top.qianshe/qiansheArchive/shared/types/blog.ts' is not under 'rootDir' 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker'. 'rootDir' is expected to contain all source files.
+  The file is in the program because:
+    Imported via '@shared/types/blog' from file 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker/src/types/management.ts'
+    Imported via '@shared/types/blog' from file 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker/src/types/index.ts'
+    Imported via '@shared/types/blog' from file 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker/src/handlers/posts.ts'
+src/types/management.ts(4,58): error TS6059: File 'D:/myProject/top.qianshe/qiansheArchive/shared/types/api.ts' is not under 'rootDir' 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker'. 'rootDir' is expected to contain all source files.
+  The file is in the program because:
+    Imported via '@shared/types/api' from file 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker/src/types/management.ts'
+    Imported via '@shared/types/api' from file 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker/src/types/index.ts'
+    Imported via '@shared/types/api' from file 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker/src/handlers/auth.ts'
+    Imported via '@shared/types/api' from file 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker/src/middleware/auth.ts'
+    Imported via '@shared/types/api' from file 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker/src/handlers/posts.ts'
+    Imported via '@shared/types/api' from file 'D:/myProject/top.qianshe/qiansheArchive/dashboard/worker/src/services/monitoring.ts'
+src/types/management.ts(59,18): error TS2430: Interface 'DashboardUser' incorrectly extends interface 'Omit<User, "role">'.
+  Property 'username' is optional in type 'DashboardUser' but required in type 'Omit<User, "role">'.
+../../shared/types/auth.ts(169,3): error TS7061: A mapped type may not declare properties or methods.
+../../shared/types/environment.ts(182,17): error TS2304: Cannot find name 'ScheduledHandler'.
+../../shared/types/environment.ts(183,18): error TS2304: Cannot find name 'ScheduledHandler'.
+../../shared/types/environment.ts(184,20): error TS2304: Cannot find name 'ScheduledHandler'.
+../../shared/types/environment.ts(253,5): error TS2353: Object literal may only specify known properties, and 'default' does not exist in type 'EnvValidationRule'.
+../../shared/types/workers.ts(20,18): error TS2430: Interface 'WorkersRequest' incorrectly extends interface 'Request<unknown, CfProperties<unknown>>'.
+  Types of property 'cf' are incompatible.
+    Type 'IncomingRequestCfProperties' is not assignable to type 'CfProperties<unknown>'.
+      Type 'IncomingRequestCfProperties' is not assignable to type 'IncomingRequestCfProperties<unknown>'.
+        Type 'IncomingRequestCfProperties' is not assignable to type 'IncomingRequestCfPropertiesBase'.
+          Types of property 'edgeRequestKeepAliveStatus' are incompatible.
+            Type 'number' is not assignable to type 'IncomingRequestCfPropertiesEdgeRequestKeepAliveStatus'.

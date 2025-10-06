@@ -1,0 +1,31 @@
+{
+  "name": "portfolio-worker",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker for portfolio public API and static hosting",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "tsc",
+    "build:frontend": "cd ../frontend && npm run build",
+    "deploy": "npm run build:frontend && wrangler deploy",
+    "deploy:dev": "npm run build:frontend && wrangler deploy --env development",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf static dist"
+  },
+  "dependencies": {
+    "@cloudflare/workers-types": "^4.20231121.0",
+    "hono": "^4.0.0",
+    "zod": "^3.22.4",
+    "marked": "^11.1.1",
+    "dompurify": "^3.0.6",
+    "@hono/node-server": "^1.12.0"
+  },
+  "devDependencies": {
+    "@types/marked": "^6.0.0",
+    "typescript": "^5.3.3",
+    "wrangler": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

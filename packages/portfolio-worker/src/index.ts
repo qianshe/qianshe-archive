@@ -4,6 +4,7 @@ import { Env } from './types';
 import { CacheManager } from './middleware/cache';
 import { StaticOptimizer, staticMiddleware } from './middleware/static';
 import { ResponseOptimizer } from './middleware/response';
+import { getAssetFromKV } from '@cloudflare/kv-asset-handler';
 
 // 创建性能优化中间件实例
 const createMiddlewareInstances = (env: Env) => {
@@ -116,38 +117,83 @@ app.all('/api/*', async (c) => {
 });
   */
 
-// 静态文件服务
-app.get('/*', async c => {
+// 静态文件服务 - 处理所有非 API 请求
+app.get('*', async c => {
+  const url = new URL(c.req.url);
+  const pathname = url.pathname;
 
-  try {
-    // 尝试从静态资源获取文件
-    if (c.env.ASSETS) {
-      const staticContent = await c.env.ASSETS.fetch(
-        new Request(
-          c.req.url.replace(
-            `${c.req.url.split('/')[0]}//${c.req.url.split('/')[2]}`,
-            'http://localhost:8787'
-          )
-        )
-      );
-
-      if (staticContent.status === 200) {
-        return staticContent;
-      }
-    }
-  } catch (error) {
-    // 静态资源不存在，继续处理
+  // API 路由已经在前面处理,如果到了这里说明是 404
+  if (pathname.startsWith('/api')) {
+    return c.json(
+      {
+        success: false,
+        error: 'API endpoint not found',
+        message: 'The requested API endpoint was not found'
+      },
+      404
+    );
   }
 
-  // 返回默认主页或404
-  return c.json(
-    {
-      success: false,
-      error: 'Not found',
-      message: 'The requested resource was not found'
-    },
-    404
-  );
+  // 尝试从 KV 获取静态资源
+  try {
+    // 创建 ExecutionContext
+    const executionContext: ExecutionContext = {
+      waitUntil: (promise: Promise<unknown>) => promise,
+      passThroughOnException: () => {},
+      props: {}
+    };
+
+    const asset = await getAssetFromKV(
+      {
+        request: c.req.raw,
+        waitUntil: (promise: Promise<unknown>) => executionContext.waitUntil(promise)
+      },
+      {
+        ASSET_NAMESPACE: (c.env as any).__STATIC_CONTENT!,
+        ASSET_MANIFEST: {},
+      }
+    );
+
+    // 添加缓存头
+    const response = new Response(asset.body, asset);
+    response.headers.set('Cache-Control', 'public, max-age=3600');
+    
+    return response;
+  } catch (e) {
+    // 如果找不到资源,返回 index.html (用于 SPA 路由)
+    try {
+      const executionContext: ExecutionContext = {
+        waitUntil: (promise: Promise<unknown>) => promise,
+        passThroughOnException: () => {},
+        props: {}
+      };
+
+      const indexAsset = await getAssetFromKV(
+        {
+          request: new Request(`${url.origin}/index.html`, c.req.raw),
+          waitUntil: (promise: Promise<unknown>) => executionContext.waitUntil(promise)
+        },
+        {
+          ASSET_NAMESPACE: (c.env as any).__STATIC_CONTENT!,
+          ASSET_MANIFEST: {},
+        }
+      );
+
+      const response = new Response(indexAsset.body, indexAsset);
+      response.headers.set('Content-Type', 'text/html');
+      
+      return response;
+    } catch (indexError) {
+      return c.json(
+        {
+          success: false,
+          error: 'Page not found',
+          message: 'The requested resource was not found'
+        },
+        404
+      );
+    }
+  }
 });
 
 // 增强的错误处理
@@ -173,12 +219,8 @@ app.onError((err, c) => {
   );
 });
 
-// 增强的404处理
-app.notFound(_c => {
-  const responseOptimizer = new ResponseOptimizer();
-
-  return responseOptimizer.error('The requested resource was not found', 404, 'NOT_FOUND');
-});
+// 404 处理已经在静态文件服务中处理
+// app.notFound 不再需要,因为所有路由都被上面的 app.get('*') 捕获
 
 // 导出增强的fetch处理器
 export default {

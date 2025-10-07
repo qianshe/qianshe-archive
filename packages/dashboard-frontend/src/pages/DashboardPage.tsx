@@ -150,29 +150,60 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
+  const getStatColorClasses = (color: string) => {
+    const colorMap: Record<string, { bg: string; icon: string }> = {
+      blue: {
+        bg: 'bg-blue-100 dark:bg-blue-900/20',
+        icon: 'text-blue-600 dark:text-blue-400'
+      },
+      green: {
+        bg: 'bg-green-100 dark:bg-green-900/20',
+        icon: 'text-green-600 dark:text-green-400'
+      },
+      purple: {
+        bg: 'bg-purple-100 dark:bg-purple-900/20',
+        icon: 'text-purple-600 dark:text-purple-400'
+      },
+      orange: {
+        bg: 'bg-orange-100 dark:bg-orange-900/20',
+        icon: 'text-orange-600 dark:text-orange-400'
+      },
+      indigo: {
+        bg: 'bg-indigo-100 dark:bg-indigo-900/20',
+        icon: 'text-indigo-600 dark:text-indigo-400'
+      },
+      pink: {
+        bg: 'bg-pink-100 dark:bg-pink-900/20',
+        icon: 'text-pink-600 dark:text-pink-400'
+      }
+    };
+    return colorMap[color] || colorMap.blue;
+  };
+
   return (
-    <div className="container-responsive py-6">
+    <div className="container-responsive py-8">
       {/* 页面标题 */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">仪表盘</h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
+      <div className="mb-8 animate-fade-in">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">仪表盘</h1>
+        <p className="mt-2 text-base text-gray-600 dark:text-gray-400">
           欢迎回到谦舍管理后台，这里是您的数据概览。
         </p>
       </div>
 
       {/* 统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 md:gap-6 mb-8">
         {stats.map(stat => {
           const Icon = stat.icon;
+          const colorClasses = getStatColorClasses(stat.color);
           const card = (
-            <div key={stat.title} className="card hover:shadow-md transition-shadow cursor-pointer">
-              <div className="card-body">
+            <div key={stat.title} className="card hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 group">
+              <div className="card-body p-5">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                       {stat.title}
                     </p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                    <p className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mt-2 group-hover:scale-105 transition-transform">
                       {stat.value}
                     </p>
                     {stat.change !== undefined && (
@@ -198,12 +229,8 @@ export const DashboardPage: React.FC = () => {
                       </div>
                     )}
                   </div>
-                  <div
-                    className={`p-3 bg-${stat.color}-100 dark:bg-${stat.color}-900/20 rounded-lg`}
-                  >
-                    <Icon
-                      className={`w-6 h-6 text-${stat.color}-600 dark:text-${stat.color}-400`}
-                    />
+                  <div className={`p-3 ${colorClasses.bg} rounded-xl group-hover:scale-110 transition-transform duration-300`}>
+                    <Icon className={`w-6 h-6 ${colorClasses.icon}`} />
                   </div>
                 </div>
               </div>
@@ -220,19 +247,21 @@ export const DashboardPage: React.FC = () => {
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
         {/* 最近内容 */}
-        <div className="card">
-          <div className="card-header">
+        <div className="card hover:shadow-lg transition-shadow duration-300">
+          <div className="card-header bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">最近内容</h2>
-              <Clock className="w-5 h-5 text-gray-400" />
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                <Clock className="w-5 h-5 text-blue-500 dark:text-blue-400 mr-2" />
+                最近内容
+              </h2>
             </div>
           </div>
-          <div className="card-body">
+          <div className="card-body p-6">
             <div className="space-y-4">
               {recentItems.map(item => (
-                <div key={item.id} className="flex items-start justify-between">
+                <div key={item.id} className="flex items-start justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 -mx-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-1">
                       <span className={`badge ${getTypeColor(item.type)}`}>
@@ -272,18 +301,20 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* 快速操作 */}
-        <div className="card">
-          <div className="card-header">
+        <div className="card hover:shadow-lg transition-shadow duration-300">
+          <div className="card-header bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">快速操作</h2>
-              <AlertCircle className="w-5 h-5 text-gray-400" />
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                <AlertCircle className="w-5 h-5 text-emerald-500 dark:text-emerald-400 mr-2" />
+                快速操作
+              </h2>
             </div>
           </div>
-          <div className="card-body">
+          <div className="card-body p-6">
             <div className="space-y-4">
               <Link
                 to="/posts/new"
-                className="flex items-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                className="flex items-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200 transform hover:scale-[1.02] hover:shadow-md"
               >
                 <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400 mr-3" />
                 <div>
@@ -294,7 +325,7 @@ export const DashboardPage: React.FC = () => {
 
               <Link
                 to="/projects/new"
-                className="flex items-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                className="flex items-center p-4 bg-green-50 dark:bg-green-900/20 rounded-xl hover:bg-green-100 dark:hover:bg-green-900/30 transition-all duration-200 transform hover:scale-[1.02] hover:shadow-md"
               >
                 <FolderOpen className="w-6 h-6 text-green-600 dark:text-green-400 mr-3" />
                 <div>
@@ -305,7 +336,7 @@ export const DashboardPage: React.FC = () => {
 
               <Link
                 to="/comments"
-                className="flex items-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
+                className="flex items-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-all duration-200 transform hover:scale-[1.02] hover:shadow-md"
               >
                 <MessageSquare className="w-6 h-6 text-purple-600 dark:text-purple-400 mr-3" />
                 <div>
@@ -316,7 +347,7 @@ export const DashboardPage: React.FC = () => {
 
               <Link
                 to="/analytics"
-                className="flex items-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors"
+                className="flex items-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all duration-200 transform hover:scale-[1.02] hover:shadow-md"
               >
                 <TrendingUp className="w-6 h-6 text-orange-600 dark:text-orange-400 mr-3" />
                 <div>

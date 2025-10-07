@@ -32,9 +32,20 @@ export default defineConfig({
   build: {
     outDir: '../portfolio-worker/dist',
     emptyOutDir: true,
+    chunkSizeWarningLimit: 500, // portfolio较小，保持500KB阈值
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html')
+      },
+      output: {
+        manualChunks: {
+          // React生态系统
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          // 查询和状态管理
+          'query-vendor': ['@tanstack/react-query', '@tanstack/react-query-devtools'],
+          // UI和工具
+          'utils-vendor': ['axios', 'lucide-react']
+        }
       }
     },
     sourcemap: true,

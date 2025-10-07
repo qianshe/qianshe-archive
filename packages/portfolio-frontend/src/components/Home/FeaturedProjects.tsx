@@ -26,20 +26,28 @@ const FeaturedProjects: React.FC<FeaturedProjectsProps> = ({ projects }) => {
   }
 
   return (
-    <section className="py-16 bg-white dark:bg-gray-900">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">精选项目</h2>
+    <section className="py-20 bg-white dark:bg-gray-900 relative overflow-hidden">
+      {/* Background Decoration */}
+      <div className="absolute inset-0 opacity-5 dark:opacity-10">
+        <div className="absolute top-1/4 left-0 w-64 h-64 bg-emerald-500 rounded-full filter blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-0 w-64 h-64 bg-blue-500 rounded-full filter blur-3xl"></div>
+      </div>
+      
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div className="text-center mb-16 animate-fade-in">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">精选项目</h2>
+          <div className="w-20 h-1 bg-gradient-to-r from-blue-500 to-emerald-500 mx-auto mb-6 rounded-full"></div>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             个人开发的创意项目和技术实践作品
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {projects.map(project => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+          {projects.map((project, index) => (
             <div
               key={project.id}
-              className="group bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-all duration-300"
+              className="group bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-800/30 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-2xl hover:border-emerald-300 dark:hover:border-emerald-700 transition-all duration-300 transform hover:-translate-y-2 animate-slide-up"
+              style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Project Header */}
               <div className="p-6">
@@ -139,10 +147,10 @@ const FeaturedProjects: React.FC<FeaturedProjectsProps> = ({ projects }) => {
               <div className="px-6 pb-6">
                 <Link
                   to={`/projects/${project.slug}`}
-                  className="inline-flex items-center text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-all duration-200 transform hover:scale-105 group"
                 >
                   查看详情
-                  <ExternalLink className="ml-1 w-4 h-4" />
+                  <ExternalLink className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
                 </Link>
               </div>
             </div>
@@ -150,12 +158,15 @@ const FeaturedProjects: React.FC<FeaturedProjectsProps> = ({ projects }) => {
         </div>
 
         {/* View All Button */}
-        <div className="text-center mt-12">
+        <div className="text-center mt-16">
           <Link
             to="/projects"
-            className="inline-flex items-center px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="inline-flex items-center px-8 py-4 border-2 border-blue-500 dark:border-blue-400 rounded-xl text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300 transform hover:scale-105 hover:shadow-lg font-medium group"
           >
             查看所有项目
+            <svg className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
           </Link>
         </div>
       </div>

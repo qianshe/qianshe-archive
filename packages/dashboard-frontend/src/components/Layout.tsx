@@ -69,19 +69,19 @@ export const Layout: React.FC = () => {
       <motion.div
         initial={false}
         animate={{
-          x: sidebarOpen ? 0 : -320
+          x: sidebarOpen ? 0 : -280
         }}
-        className="fixed inset-y-0 left-0 z-50 w-80 bg-white dark:bg-gray-800 shadow-lg lg:translate-x-0 lg:static lg:inset-0"
+        className="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg lg:translate-x-0 lg:static lg:inset-0"
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">谦</span>
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">谦</span>
               </div>
-              <span className="ml-3 text-xl font-bold text-gray-900 dark:text-white">
-                谦舍管理后台
+              <span className="ml-2 text-lg font-bold text-gray-900 dark:text-white">
+                谦舍
               </span>
             </div>
             <button
@@ -93,13 +93,13 @@ export const Layout: React.FC = () => {
           </div>
 
           {/* 用户信息 */}
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center">
-              <div className="w-10 h-10 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
-                <User className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+              <div className="w-9 h-9 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
+                <User className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </div>
-              <div className="ml-3 flex-1">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
+              <div className="ml-2 flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                   {user?.display_name || user?.username}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -114,7 +114,7 @@ export const Layout: React.FC = () => {
           </div>
 
           {/* 导航菜单 */}
-          <nav className="flex-1 px-4 py-6 space-y-2">
+          <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
             {filteredNavigation.map(item => {
               const isActive = location.pathname === item.href;
               return (
@@ -122,14 +122,14 @@ export const Layout: React.FC = () => {
                   key={item.name}
                   to={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors ${
                     isActive
                       ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
                       : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'
                   }`}
                 >
                   <item.icon
-                    className={`mr-3 h-5 w-5 ${
+                    className={`mr-3 h-5 w-5 flex-shrink-0 ${
                       isActive
                         ? 'text-blue-500 dark:text-blue-400'
                         : 'text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300'

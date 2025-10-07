@@ -15,6 +15,7 @@ export interface PortfolioEnv {
   UPLOAD_BUCKET?: R2Bucket;
   CACHE: KVNamespace;
   ASSETS?: Fetcher;
+  __STATIC_CONTENT?: KVNamespace;
 
   // Portfolio 特定
   ENVIRONMENT: 'development' | 'production';

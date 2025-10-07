@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
+import { getAssetFromKV } from '@cloudflare/kv-asset-handler';
 import { authRoutes } from './handlers/auth';
 import { postRoutes } from './handlers/posts';
 import { projectRoutes } from './handlers/projects';
@@ -31,6 +32,7 @@ type Bindings = {
   ENVIRONMENT: string;
   SITE_URL: string;
   API_BASE_URL: string;
+  __STATIC_CONTENT?: KVNamespace;
 };
 
 // 创建性能优化中间件实例
@@ -262,28 +264,95 @@ app.use('*', async (c, next) => {
   }
 });
 
-// 404 处理
-app.notFound(c => {
-  return c.json(
-    {
-      success: false,
-      error: 'API endpoint not found',
-      code: 'NOT_FOUND',
-      availableEndpoints: [
-        '/health',
-        '/api/auth/*',
-        '/api/posts/*',
-        '/api/projects/*',
-        '/api/comments/*',
-        '/api/users/*',
-        '/api/analytics/*',
-        '/api/upload/*',
-        '/api/settings/*',
-        '/api/admin/*'
-      ]
-    },
-    404
-  );
+// 静态文件服务 - 处理所有非 API 请求
+app.get('*', async c => {
+  const url = new URL(c.req.url);
+  const pathname = url.pathname;
+
+  // API 路由已经在前面处理,如果到了这里说明是 404
+  if (pathname.startsWith('/api')) {
+    return c.json(
+      {
+        success: false,
+        error: 'API endpoint not found',
+        code: 'NOT_FOUND',
+        availableEndpoints: [
+          '/health',
+          '/api/auth/*',
+          '/api/posts/*',
+          '/api/projects/*',
+          '/api/comments/*',
+          '/api/users/*',
+          '/api/analytics/*',
+          '/api/upload/*',
+          '/api/settings/*',
+          '/api/admin/*'
+        ]
+      },
+      404
+    );
+  }
+
+  // 尝试从 KV 获取静态资源
+  try {
+    // 创建 ExecutionContext
+    const executionContext: ExecutionContext = {
+      waitUntil: (promise: Promise<unknown>) => promise,
+      passThroughOnException: () => {},
+      props: {}
+    };
+
+    const asset = await getAssetFromKV(
+      {
+        request: c.req.raw,
+        waitUntil: (promise: Promise<unknown>) => executionContext.waitUntil(promise)
+      },
+      {
+        ASSET_NAMESPACE: c.env.__STATIC_CONTENT!,
+        ASSET_MANIFEST: {},
+      }
+    );
+
+    // 添加缓存头
+    const response = new Response(asset.body, asset);
+    response.headers.set('Cache-Control', 'public, max-age=3600');
+    
+    return response;
+  } catch (e) {
+    // 如果找不到资源,返回 index.html (用于 SPA 路由)
+    try {
+      const executionContext: ExecutionContext = {
+        waitUntil: (promise: Promise<unknown>) => promise,
+        passThroughOnException: () => {},
+        props: {}
+      };
+
+      const indexAsset = await getAssetFromKV(
+        {
+          request: new Request(`${url.origin}/index.html`, c.req.raw),
+          waitUntil: (promise: Promise<unknown>) => executionContext.waitUntil(promise)
+        },
+        {
+          ASSET_NAMESPACE: c.env.__STATIC_CONTENT!,
+          ASSET_MANIFEST: {},
+        }
+      );
+
+      const response = new Response(indexAsset.body, indexAsset);
+      response.headers.set('Content-Type', 'text/html');
+      
+      return response;
+    } catch (indexError) {
+      return c.json(
+        {
+          success: false,
+          error: 'Page not found',
+          code: 'NOT_FOUND'
+        },
+        404
+      );
+    }
+  }
 });
 
 // 性能统计

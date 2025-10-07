@@ -1,6 +1,6 @@
 name = "qianshe-portfolio"
 main = "src/index.ts"
-compatibility_date = "2024-01-01"
+compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
 # 静态资源配置
@@ -33,12 +33,7 @@ database_id = "your-local-d1-id"
 
 # 生产环境
 [env.production]
-vars = {
-  ENVIRONMENT = "production",
-  SITE_URL = "https://qianshe.top",
-  API_BASE_URL = "https://qianshe.top",
-  JWT_SECRET = "your-production-jwt-secret"
-}
+vars = { ENVIRONMENT = "production", SITE_URL = "https://qianshe.top", API_BASE_URL = "https://qianshe.top", JWT_SECRET = "your-production-jwt-secret" }
 
 kv_namespaces = [
   { binding = "CACHE_KV", id = "qianshe-cache-prod" }
@@ -61,4 +56,4 @@ memory = "128MB"
 
 # 构建配置
 [build]
-command = "cd ../portfolio-frontend && npm run build && cp -r dist/* ../portfolio-worker/static/"
+command = "cd ../portfolio-frontend && npm run build"

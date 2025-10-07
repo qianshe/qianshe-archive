@@ -1,6 +1,6 @@
 name = "qianshe-dashboard"
 main = "src/index.ts"
-compatibility_date = "2024-01-01"
+compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
 # 静态文件服务配置
@@ -47,13 +47,12 @@ bucket_name = "qianshe-uploads-dev"
 
 # 生产环境
 [env.production]
-vars = {
-  ENVIRONMENT = "production",
-  SITE_URL = "https://dashboard.qianshe.top",
-  API_BASE_URL = "https://dashboard.qianshe.top",
-  JWT_SECRET = "your-production-jwt-secret",
+[env.production.vars]
+  ENVIRONMENT = "production"
+  SITE_URL = "https://dashboard.qianshe.top"
+  API_BASE_URL = "https://dashboard.qianshe.top"
+  JWT_SECRET = "your-production-jwt-secret"
   ADMIN_EMAIL = "admin@qianshe.top"
-}
 
 kv_namespaces = [
   { binding = "SESSIONS_KV", id = "qianshe-sessions-prod" },

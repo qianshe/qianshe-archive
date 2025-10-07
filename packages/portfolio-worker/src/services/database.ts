@@ -7,12 +7,47 @@ export interface DatabaseResult<T> {
   error?: string;
 }
 
-// 通用数据库查询执行器
+// 缓存配置接口
+interface CacheConfig {
+  cache?: boolean;
+  ttl?: number; // 缓存时间（秒）
+}
+
+// 生成缓存键
+function generateCacheKey(query: string, params?: any[]): string {
+  const queryStr = query.trim().toLowerCase();
+  const paramsStr = params ? JSON.stringify(params) : '';
+  const hash = btoa(queryStr + paramsStr).slice(0, 32);
+  return `portfolio_db:${hash}`;
+}
+
+// 通用数据库查询执行器（带缓存）
 export async function executeQuery<T>(
   env: Env,
   query: string,
-  params?: any[]
+  params?: any[],
+  cacheConfig?: CacheConfig
 ): Promise<DatabaseResult<T[]>> {
+  const shouldCache = cacheConfig?.cache !== false && query.trim().toLowerCase().startsWith('select');
+  const ttl = cacheConfig?.ttl || 300; // 默认5分钟
+
+  // 检查缓存
+  if (shouldCache && env.CACHE_KV) {
+    try {
+      const cacheKey = generateCacheKey(query, params);
+      const cached = await env.CACHE_KV.get(cacheKey, 'json');
+
+      if (cached) {
+        return {
+          success: true,
+          data: cached as T[]
+        };
+      }
+    } catch (error) {
+      // 缓存读取失败不影响查询
+    }
+  }
+
   try {
     const stmt = env.SHARED_DB.prepare(query);
     let result;
@@ -23,9 +58,19 @@ export async function executeQuery<T>(
       result = await stmt.all();
     }
 
+    const data = result.results as T[];
+
+    // 写入缓存
+    if (shouldCache && env.CACHE_KV) {
+      const cacheKey = generateCacheKey(query, params);
+      env.CACHE_KV.put(cacheKey, JSON.stringify(data), { expirationTtl: ttl }).catch(() => {
+        // 缓存写入失败不影响响应
+      });
+    }
+
     return {
       success: true,
-      data: result.results as T[]
+      data
     };
   } catch (error) {
     console.error('Database query error:', error);
@@ -36,12 +81,33 @@ export async function executeQuery<T>(
   }
 }
 
-// 执行单行查询
+// 执行单行查询（带缓存）
 export async function executeQueryFirst<T>(
   env: Env,
   query: string,
-  params?: any[]
+  params?: any[],
+  cacheConfig?: CacheConfig
 ): Promise<DatabaseResult<T>> {
+  const shouldCache = cacheConfig?.cache !== false && query.trim().toLowerCase().startsWith('select');
+  const ttl = cacheConfig?.ttl || 300;
+
+  // 检查缓存
+  if (shouldCache && env.CACHE_KV) {
+    try {
+      const cacheKey = generateCacheKey(query, params);
+      const cached = await env.CACHE_KV.get(cacheKey, 'json');
+
+      if (cached) {
+        return {
+          success: true,
+          data: cached as T
+        };
+      }
+    } catch (error) {
+      // 缓存读取失败不影响查询
+    }
+  }
+
   try {
     const stmt = env.SHARED_DB.prepare(query);
     let result;
@@ -52,9 +118,19 @@ export async function executeQueryFirst<T>(
       result = await stmt.first();
     }
 
+    const data = result as T;
+
+    // 写入缓存
+    if (shouldCache && env.CACHE_KV) {
+      const cacheKey = generateCacheKey(query, params);
+      env.CACHE_KV.put(cacheKey, JSON.stringify(data), { expirationTtl: ttl }).catch(() => {
+        // 缓存写入失败不影响响应
+      });
+    }
+
     return {
       success: true,
-      data: result as T
+      data
     };
   } catch (error) {
     console.error('Database query error:', error);

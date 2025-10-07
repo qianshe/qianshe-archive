@@ -13,7 +13,7 @@ export interface PortfolioEnv {
   JWT_SECRET?: string;
   CORS_ORIGIN?: string;
   UPLOAD_BUCKET?: R2Bucket;
-  CACHE: KVNamespace;
+  CACHE_KV: KVNamespace; // 修正：与 wrangler.toml 中的绑定名称一致
   ASSETS?: Fetcher;
   __STATIC_CONTENT?: KVNamespace;
 

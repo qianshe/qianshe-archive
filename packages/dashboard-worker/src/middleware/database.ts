@@ -30,11 +30,13 @@ interface QueryCache {
 
 export class DatabaseOptimizer {
   private db: D1Database;
-  private cache: Map<string, QueryCache> = new Map();
+  private kvCache?: KVNamespace; // L2 缓存 (持久化，跨 Worker 共享)
+  private memCache: Map<string, QueryCache> = new Map(); // L1 缓存 (快速，单 Worker)
   private queryStats: Map<string, { count: number; totalTime: number; errors: number }> = new Map();
 
-  constructor(db: D1Database) {
+  constructor(db: D1Database, kvCache?: KVNamespace) {
     this.db = db;
+    this.kvCache = kvCache;
   }
 
   /**
@@ -55,13 +57,13 @@ export class DatabaseOptimizer {
   }
 
   /**
-   * 清理过期缓存
+   * 清理过期缓存（仅清理内存缓存）
    */
   private cleanExpiredCache(): void {
     const now = Date.now();
-    for (const [key, cache] of this.cache.entries()) {
+    for (const [key, cache] of this.memCache.entries()) {
       if (now - cache.timestamp > cache.ttl * 1000) {
-        this.cache.delete(key);
+        this.memCache.delete(key);
       }
     }
   }
@@ -95,18 +97,40 @@ export class DatabaseOptimizer {
     // 清理过期缓存
     this.cleanExpiredCache();
 
-    // 检查缓存
+    // 两级缓存检查
     if (config?.cache !== false) {
       const cacheKey = config?.cacheKey || this.generateCacheKey(query, params);
-      const cached = this.cache.get(cacheKey);
 
-      if (cached && Date.now() - cached.timestamp < cached.ttl * 1000) {
+      // L1: 检查内存缓存（最快）
+      const memCached = this.memCache.get(cacheKey);
+      if (memCached && Date.now() - memCached.timestamp < memCached.ttl * 1000) {
         return {
           success: true,
-          data: cached.data as T,
+          data: memCached.data as T,
           executionTime: Date.now() - startTime,
           fromCache: true
         };
+      }
+
+      // L2: 检查 KV 缓存（中速）
+      if (this.kvCache) {
+        try {
+          const kvCached = await this.kvCache.get(cacheKey, 'json');
+          if (kvCached) {
+            const cached = kvCached as QueryCache;
+            // 回写到内存缓存
+            this.memCache.set(cacheKey, cached);
+
+            return {
+              success: true,
+              data: cached.data as T,
+              executionTime: Date.now() - startTime,
+              fromCache: true
+            };
+          }
+        } catch (error) {
+          // KV 缓存失败不影响查询，继续执行数据库查询
+        }
       }
     }
 
@@ -143,12 +167,22 @@ export class DatabaseOptimizer {
         const cacheKey = config?.cacheKey || this.generateCacheKey(query, params);
         const ttl = config?.cacheTTL || 300; // 默认5分钟
 
-        this.cache.set(cacheKey, {
+        const cacheData: QueryCache = {
           data,
           timestamp: Date.now(),
           ttl,
           queryHash
-        });
+        };
+
+        // 写入内存缓存（L1）
+        this.memCache.set(cacheKey, cacheData);
+
+        // 写入 KV 缓存（L2）- 异步，不阻塞响应
+        if (this.kvCache) {
+          this.kvCache.put(cacheKey, JSON.stringify(cacheData), { expirationTtl: ttl }).catch(() => {
+            // KV 写入失败不影响查询结果
+          });
+        }
       }
 
       return {
@@ -205,19 +239,29 @@ export class DatabaseOptimizer {
   }
 
   /**
-   * 清除缓存
+   * 清除缓存（包括内存和 KV）
    */
   clearCache(pattern?: string): void {
     if (pattern) {
       // 按模式清除
-      for (const [key] of this.cache.entries()) {
+      const keysToDelete: string[] = [];
+      for (const [key] of this.memCache.entries()) {
         if (key.includes(pattern)) {
-          this.cache.delete(key);
+          this.memCache.delete(key);
+          keysToDelete.push(key);
         }
       }
+
+      // 异步清除 KV 缓存
+      if (this.kvCache && keysToDelete.length > 0) {
+        Promise.all(keysToDelete.map(key => this.kvCache!.delete(key))).catch(() => {
+          // 忽略 KV 删除错误
+        });
+      }
     } else {
-      // 清除所有缓存
-      this.cache.clear();
+      // 清除所有内存缓存
+      this.memCache.clear();
+      // 注意：KV 不支持批量删除全部键
     }
   }
 

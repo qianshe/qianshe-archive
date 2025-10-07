@@ -8,7 +8,7 @@ import { getAssetFromKV } from '@cloudflare/kv-asset-handler';
 
 // 创建性能优化中间件实例
 const createMiddlewareInstances = (env: Env) => {
-  const cacheManager = new CacheManager(env.CACHE);
+  const cacheManager = new CacheManager(env.CACHE_KV);
   const staticOptimizer = new StaticOptimizer();
   const responseOptimizer = new ResponseOptimizer({
     compress: true,
@@ -26,6 +26,32 @@ const createMiddlewareInstances = (env: Env) => {
     cacheManager,
     responseOptimizer
   };
+};
+
+// 差异化的静态资源缓存策略
+const getCacheControlHeader = (pathname: string): string => {
+  // JS/CSS 带版本号hash，可永久缓存
+  if (/\.(js|css)\.\w{8,}\.(js|css)$/.test(pathname) || /\-[a-f0-9]{8,}\.(js|css)$/.test(pathname)) {
+    return 'public, max-age=31536000, immutable';
+  }
+  // 图片资源
+  if (/\.(jpg|jpeg|png|webp|gif|svg|ico)$/i.test(pathname)) {
+    return 'public, max-age=604800'; // 7天
+  }
+  // 字体文件
+  if (/\.(woff|woff2|ttf|eot)$/i.test(pathname)) {
+    return 'public, max-age=2592000'; // 30天
+  }
+  // HTML 文件
+  if (pathname.endsWith('.html') || pathname === '/' || !pathname.includes('.')) {
+    return 'public, max-age=300, must-revalidate'; // 5分钟
+  }
+  // JSON 等数据文件
+  if (/\.(json|xml|txt)$/i.test(pathname)) {
+    return 'public, max-age=1800'; // 30分钟
+  }
+  // 默认
+  return 'public, max-age=3600'; // 1小时
 };
 
 // 创建主应用
@@ -154,10 +180,11 @@ app.get('*', async c => {
       }
     );
 
-    // 添加缓存头
+    // 根据文件类型设置差异化缓存策略
     const response = new Response(asset.body, asset);
-    response.headers.set('Cache-Control', 'public, max-age=3600');
-    
+    const cacheControl = getCacheControlHeader(pathname);
+    response.headers.set('Cache-Control', cacheControl);
+
     return response;
   } catch (e) {
     // 如果找不到资源,返回 index.html (用于 SPA 路由)
@@ -235,7 +262,7 @@ export default {
 
         switch (body.type) {
           case 'clear_cache':
-            const cacheManager = new CacheManager(env.CACHE);
+            const cacheManager = new CacheManager(env.CACHE_KV);
             if (body.tag) {
               await cacheManager.clearByTag(body.tag);
             } else {

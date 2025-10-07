@@ -16,7 +16,7 @@ export async function setCache(
   ttl: number = 300 // 默认5分钟
 ): Promise<void> {
   try {
-    await env.CACHE.put(key, JSON.stringify(value), {
+    await env.CACHE_KV.put(key, JSON.stringify(value), {
       expirationTtl: ttl
     });
   } catch (error) {
@@ -27,7 +27,7 @@ export async function setCache(
 // 获取缓存
 export async function getCache<T>(env: Env, key: string): Promise<T | null> {
   try {
-    const cached = await env.CACHE.get(key);
+    const cached = await env.CACHE_KV.get(key);
     if (cached) {
       return JSON.parse(cached);
     }
@@ -41,7 +41,7 @@ export async function getCache<T>(env: Env, key: string): Promise<T | null> {
 // 删除缓存
 export async function deleteCache(env: Env, key: string): Promise<void> {
   try {
-    await env.CACHE.delete(key);
+    await env.CACHE_KV.delete(key);
   } catch (error) {
     console.error('Cache delete error:', error);
   }
@@ -51,8 +51,8 @@ export async function deleteCache(env: Env, key: string): Promise<void> {
 export async function deleteCacheByPrefix(env: Env, prefix: string): Promise<void> {
   try {
     // 注意：KV namespace的list功能在某些计划中可能不可用
-    const list = await env.CACHE.list({ prefix: CACHE_PREFIX + prefix });
-    const deletePromises = list.keys.map(key => env.CACHE.delete(key.name));
+    const list = await env.CACHE_KV.list({ prefix: CACHE_PREFIX + prefix });
+    const deletePromises = list.keys.map(key => env.CACHE_KV.delete(key.name));
     await Promise.allSettled(deletePromises);
   } catch (error) {
     console.error('Cache delete by prefix error:', error);

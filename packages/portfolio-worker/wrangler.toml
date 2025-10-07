@@ -9,8 +9,8 @@ bucket = "./dist"
 
 # 路由配置
 [env.production.routes]
-pattern = "qianshe.top/*"
-zone_name = "qianshe.top"
+pattern = "qianshe.dpdns.org/*"
+zone_name = "qianshe.dpdns.org"
 
 # 环境变量
 [vars]
@@ -23,26 +23,26 @@ JWT_SECRET = "dev-jwt-secret-change-in-production"
 [env.development]
 vars = { ENVIRONMENT = "development" }
 kv_namespaces = [
-  { binding = "CACHE_KV", id = "qianshe-cache-dev", preview_id = "qianshe-cache-dev-preview" }
+  { binding = "CACHE_KV", id = "your-base-kv-id-here", preview_id = "your-base-kv-preview-id" }  # BASE_KV
 ]
 
 [[env.development.d1_databases]]
 binding = "SHARED_DB"
-database_name = "qianshe-db-dev"
-database_id = "your-local-d1-id"
+database_name = "my_d1"
+database_id = "your-d1-id-here"  # 请替换为你的 D1 database_id
 
 # 生产环境
 [env.production]
-vars = { ENVIRONMENT = "production", SITE_URL = "https://qianshe.top", API_BASE_URL = "https://qianshe.top", JWT_SECRET = "your-production-jwt-secret" }
+vars = { ENVIRONMENT = "production", SITE_URL = "https://qianshe.dpdns.org", API_BASE_URL = "https://qianshe.dpdns.org", JWT_SECRET = "your-production-jwt-secret" }
 
 kv_namespaces = [
-  { binding = "CACHE_KV", id = "qianshe-cache-prod" }
+  { binding = "CACHE_KV", id = "your-base-kv-id-here" }  # BASE_KV
 ]
 
 [[env.production.d1_databases]]
 binding = "SHARED_DB"
-database_name = "qianshe-db"
-database_id = "your-production-d1-id"
+database_name = "my_d1"
+database_id = "your-d1-id-here"  # 同一个 D1 ID
 
 # R2 存储绑定（用于文件上传）
 [[r2_buckets]]

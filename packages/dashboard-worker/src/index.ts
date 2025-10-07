@@ -20,6 +20,8 @@ import type { AdminUser } from './types';
 interface Variables {
   user?: AdminUser;
   dbOptimizer?: DatabaseOptimizer;
+  authOptimizer?: AuthOptimizer;
+  middleware?: ReturnType<typeof createMiddlewareInstances>;
 }
 
 type Bindings = {
@@ -35,9 +37,9 @@ type Bindings = {
   __STATIC_CONTENT?: KVNamespace;
 };
 
-// 创建性能优化中间件实例
+// 创建性能优化中间件实例（添加两级缓存支持）
 const createMiddlewareInstances = (env: Bindings) => {
-  const dbOptimizer = new DatabaseOptimizer(env.SHARED_DB);
+  const dbOptimizer = new DatabaseOptimizer(env.SHARED_DB, env.CACHE_KV); // 传入 KV 缓存
   const authOptimizer = new AuthOptimizer(env.JWT_SECRET, env.SESSIONS_KV);
 
   return {
@@ -46,9 +48,52 @@ const createMiddlewareInstances = (env: Bindings) => {
   };
 };
 
+// 性能统计
+const performanceStats = {
+  requestCount: 0,
+  avgResponseTime: 0,
+  errorCount: 0,
+  startTime: Date.now()
+};
+
+// 差异化的静态资源缓存策略
+const getCacheControlHeader = (pathname: string): string => {
+  // JS/CSS 带版本号hash，可永久缓存
+  if (/\.(js|css)\.\w{8,}\.(js|css)$/.test(pathname) || /\-[a-f0-9]{8,}\.(js|css)$/.test(pathname)) {
+    return 'public, max-age=31536000, immutable';
+  }
+  // 图片资源
+  if (/\.(jpg|jpeg|png|webp|gif|svg|ico)$/i.test(pathname)) {
+    return 'public, max-age=604800'; // 7天
+  }
+  // 字体文件
+  if (/\.(woff|woff2|ttf|eot)$/i.test(pathname)) {
+    return 'public, max-age=2592000'; // 30天
+  }
+  // HTML 文件
+  if (pathname.endsWith('.html') || pathname === '/' || !pathname.includes('.')) {
+    return 'public, max-age=300, must-revalidate'; // 5分钟
+  }
+  // JSON 等数据文件
+  if (/\.(json|xml|txt)$/i.test(pathname)) {
+    return 'public, max-age=1800'; // 30分钟
+  }
+  // 默认
+  return 'public, max-age=3600'; // 1小时
+};
+
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
-// 全局性能中间件
+// 初始化中间件实例（仅创建一次）
+app.use('*', async (c, next) => {
+  const middleware = createMiddlewareInstances(c.env);
+  c.set('middleware', middleware);
+  c.set('dbOptimizer', middleware.dbOptimizer);
+  c.set('authOptimizer', middleware.authOptimizer);
+  await next();
+});
+
+// 全局性能中间件（合并响应时间统计）
 app.use('*', async (c, next) => {
   const startTime = Date.now();
 
@@ -64,20 +109,19 @@ app.use('*', async (c, next) => {
   c.header('X-Response-Time', `${responseTime}ms`);
 
   // 添加数据库统计信息
-  const { dbOptimizer } = createMiddlewareInstances(c.env);
-  const stats = dbOptimizer.getQueryStats();
+  const middleware = c.get('middleware')!;
+  const stats = middleware.dbOptimizer.getQueryStats();
   if (stats.length > 0) {
     const avgQueryTime = stats.reduce((sum, stat) => sum + stat.avgTime, 0) / stats.length;
     c.header('X-DB-Avg-Time', `${avgQueryTime.toFixed(2)}ms`);
     c.header('X-DB-Queries', stats.length.toString());
   }
-});
 
-// 数据库优化中间件
-app.use('*', async (c, next) => {
-  const { dbOptimizer } = createMiddlewareInstances(c.env);
-  c.set('dbOptimizer', dbOptimizer);
-  await next();
+  // 更新性能统计
+  performanceStats.requestCount++;
+  performanceStats.avgResponseTime =
+    (performanceStats.avgResponseTime * (performanceStats.requestCount - 1) + responseTime) /
+    performanceStats.requestCount;
 });
 
 // CORS配置
@@ -118,8 +162,8 @@ app.get('/health', c => {
 
 // 性能监控端点
 app.get('/api/performance/stats', async c => {
-  const { dbOptimizer } = createMiddlewareInstances(c.env);
-  const dbStats = dbOptimizer.getQueryStats();
+  const middleware = c.get('middleware')!;
+  const dbStats = middleware.dbOptimizer.getQueryStats();
 
   return c.json({
     success: true,
@@ -156,18 +200,16 @@ app.post('/api/analytics/track', async c => {
 
 // 受保护的路由中间件
 app.use('/api/*', async (c, next) => {
-  const { authOptimizer } = createMiddlewareInstances(c.env);
-
+  const middleware = c.get('middleware')!;
   // 应用认证中间件
-  const authMiddleware = authOptimizer.middleware();
+  const authMiddleware = middleware.authOptimizer.middleware();
   return authMiddleware(c, next);
 });
 
 // 管理员权限路由
 app.use('/api/admin/*', async (c, next) => {
-  const { authOptimizer } = createMiddlewareInstances(c.env);
-
-  const adminMiddleware = authOptimizer.middleware(permissionConfigs.admin);
+  const middleware = c.get('middleware')!;
+  const adminMiddleware = middleware.authOptimizer.middleware(permissionConfigs.admin);
   return adminMiddleware(c, next);
 });
 
@@ -198,7 +240,7 @@ app.use('/api/admin/*', async (c, next) => {
 
 // 清除缓存端点
 app.post('/api/admin/clear-cache', async c => {
-  const { dbOptimizer, authOptimizer } = createMiddlewareInstances(c.env);
+  const middleware = c.get('middleware')!;
   const user = c.get('user');
 
   if (!user || user.role !== 'admin') {
@@ -214,7 +256,7 @@ app.post('/api/admin/clear-cache', async c => {
   const { pattern } = (await c.req.json()) as { pattern?: string };
 
   // 清除数据库缓存
-  dbOptimizer.clearCache(pattern);
+  middleware.dbOptimizer.clearCache(pattern);
 
   // 清除认证缓存
   if (pattern === 'all') {
@@ -313,10 +355,11 @@ app.get('*', async c => {
       }
     );
 
-    // 添加缓存头
+    // 根据文件类型设置差异化缓存策略
     const response = new Response(asset.body, asset);
-    response.headers.set('Cache-Control', 'public, max-age=3600');
-    
+    const cacheControl = getCacheControlHeader(pathname);
+    response.headers.set('Cache-Control', cacheControl);
+
     return response;
   } catch (e) {
     // 如果找不到资源,返回 index.html (用于 SPA 路由)
@@ -355,26 +398,7 @@ app.get('*', async c => {
   }
 });
 
-// 性能统计
-const performanceStats = {
-  requestCount: 0,
-  avgResponseTime: 0,
-  errorCount: 0,
-  startTime: Date.now()
-};
-
-// 全局请求统计
-app.use('*', async (c, next) => {
-  performanceStats.requestCount++;
-  const startTime = Date.now();
-
-  await next();
-
-  const responseTime = Date.now() - startTime;
-  performanceStats.avgResponseTime =
-    (performanceStats.avgResponseTime * (performanceStats.requestCount - 1) + responseTime) /
-    performanceStats.requestCount;
-});
+// 性能统计（已合并到全局性能中间件中）
 
 export default {
   fetch: app.fetch,

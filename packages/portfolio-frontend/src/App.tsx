@@ -2,6 +2,9 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { Toaster } from 'react-hot-toast';
+import { HelmetProvider } from 'react-helmet-async';
+import ErrorBoundary from '@/components/Common/ErrorBoundary';
 import Home from '@/pages/Home';
 import Blog from '@/pages/Blog';
 import Projects from '@/pages/Projects';
@@ -28,9 +31,11 @@ const queryClient = new QueryClient({
 
 const App: React.FC = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <div className="App">
+    <ErrorBoundary>
+      <HelmetProvider>
+        <QueryClientProvider client={queryClient}>
+          <Router>
+            <div className="App">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/home" element={<Navigate to="/" replace />} />
@@ -79,9 +84,36 @@ const App: React.FC = () => {
         </div>
       </Router>
 
-      {/* 开发环境显示React Query Devtools */}
-      {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
-    </QueryClientProvider>
+        {/* Toast 通知 */}
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: 'var(--toast-bg)',
+              color: 'var(--toast-color)',
+              border: '1px solid var(--toast-border)'
+            },
+            success: {
+              iconTheme: {
+                primary: '#10b981',
+                secondary: '#fff'
+              }
+            },
+            error: {
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#fff'
+              }
+            }
+          }}
+        />
+
+          {/* 开发环境显示React Query Devtools */}
+          {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+        </QueryClientProvider>
+      </HelmetProvider>
+    </ErrorBoundary>
   );
 };
 

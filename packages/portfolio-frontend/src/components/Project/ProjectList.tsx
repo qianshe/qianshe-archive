@@ -1,5 +1,6 @@
 import React from 'react';
 import ProjectCard from './ProjectCard';
+import EmptyState from '@/components/Common/EmptyState';
 import { Project } from '@/types';
 
 interface ProjectListProps {
@@ -61,27 +62,11 @@ const ProjectList: React.FC<ProjectListProps> = ({ projects, loading = false }) 
 
   if (projects.length === 0) {
     return (
-      <div className="text-center py-16">
-        <div className="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-6 flex items-center justify-center">
-          <svg
-            className="w-12 h-12 text-gray-400 dark:text-gray-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-            />
-          </svg>
-        </div>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">暂无项目</h3>
-        <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-          还没有发布的开源项目，或者当前筛选条件下没有找到相关内容。
-        </p>
-      </div>
+      <EmptyState
+        type="search"
+        title="暂无项目"
+        description="还没有发布的开源项目，或者当前筛选条件下没有找到相关内容。"
+      />
     );
   }
 

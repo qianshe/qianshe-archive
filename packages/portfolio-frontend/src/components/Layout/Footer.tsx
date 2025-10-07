@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Github, Mail, Heart, ExternalLink } from 'lucide-react';
+import { Github, Mail, Heart, ExternalLink, ChevronDown } from 'lucide-react';
 
 interface FooterLink {
   label: string;
@@ -14,6 +14,9 @@ interface FooterSection {
 }
 
 const Footer: React.FC = () => {
+  const [hoveredSection, setHoveredSection] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
   const sections: FooterSection[] = [
     {
       title: '内容',
@@ -42,78 +45,168 @@ const Footer: React.FC = () => {
     }
   ];
 
+  // 监听窗口大小变化以判断是否为移动端
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const currentYear = new Date().getFullYear();
 
   return (
     <footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Content */}
-        <div className="py-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="py-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Brand */}
             <div className="lg:col-span-1">
-              <div className="flex items-center space-x-2 mb-4">
+              <div className="flex items-center space-x-2 mb-2">
                 <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                  谦
+                  舍
                 </div>
-                <span className="text-xl font-bold text-gray-900 dark:text-white">谦舍</span>
+                <span className="text-xl font-bold text-gray-900 dark:text-white">千舍</span>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                谦者，德之柄也；舍者，义之本也。
-              </p>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                记录技术学习、生活感悟和项目作品的个人空间。
+                记录技术与作品
               </p>
             </div>
 
-            {/* Links Sections */}
-            {sections.map(section => (
-              <div key={section.title}>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-4">
-                  {section.title}
-                </h3>
-                <ul className="space-y-3">
-                  {section.links.map(link => (
-                    <li key={link.label}>
-                      {link.external ? (
-                        <a
-                          href={link.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-gray-600 dark:text-gray-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors flex items-center space-x-1"
-                        >
-                          <span>{link.label}</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      ) : (
-                        <Link
-                          to={link.href}
-                          className="text-sm text-gray-600 dark:text-gray-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors"
-                        >
-                          {link.label}
-                        </Link>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+            {/* Links Sections - Desktop: Hover to expand / Mobile: Traditional layout */}
+            {isMobile ? (
+              // 移动端：传统布局
+              <>
+                {sections.map(section => (
+                  <div key={section.title}>
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-3">
+                      {section.title}
+                    </h3>
+                    <ul className="space-y-2">
+                      {section.links.map(link => (
+                        <li key={link.label}>
+                          {link.external ? (
+                            <a
+                              href={link.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-gray-600 dark:text-gray-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors flex items-center space-x-1"
+                            >
+                              <span>{link.label}</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          ) : (
+                            <Link
+                              to={link.href}
+                              className="text-sm text-gray-600 dark:text-gray-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors"
+                            >
+                              {link.label}
+                            </Link>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </>
+            ) : (
+              // 桌面端：悬停展开
+              <div className="lg:col-span-3 flex justify-center md:justify-end items-start gap-6">
+                {sections.map(section => (
+                  <div
+                    key={section.title}
+                    className="relative"
+                    onMouseEnter={() => setHoveredSection(section.title)}
+                    onMouseLeave={() => setHoveredSection(null)}
+                  >
+                    {/* 标题按钮 */}
+                    <button
+                      className={`
+                        flex items-center space-x-1 text-sm font-semibold uppercase tracking-wider
+                        transition-all duration-200 py-2 px-3 rounded-lg
+                        ${hoveredSection === section.title
+                          ? 'text-emerald-500 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20'
+                          : 'text-gray-900 dark:text-white hover:text-emerald-500 dark:hover:text-emerald-400'
+                        }
+                      `}
+                      aria-expanded={hoveredSection === section.title}
+                      aria-haspopup="true"
+                    >
+                      <span>{section.title}</span>
+                      <ChevronDown
+                        className={`
+                          w-4 h-4 transition-transform duration-200
+                          ${hoveredSection === section.title ? 'rotate-180' : ''}
+                        `}
+                      />
+                    </button>
+
+                    {/* 悬停弹出菜单 */}
+                    <div
+                      className={`
+                        absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56
+                        transition-all duration-200 origin-bottom
+                        ${hoveredSection === section.title
+                          ? 'opacity-100 scale-100 pointer-events-auto'
+                          : 'opacity-0 scale-95 pointer-events-none'
+                        }
+                      `}
+                      style={{ zIndex: 50 }}
+                    >
+                      {/* 箭头指示器 */}
+                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-white dark:bg-gray-800 border-r border-b border-gray-200 dark:border-gray-700 rotate-45" />
+
+                      {/* 菜单内容 */}
+                      <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <ul className="py-2">
+                          {section.links.map(link => (
+                            <li key={link.label}>
+                              {link.external ? (
+                                <a
+                                  href={link.href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                                >
+                                  <span>{link.label}</span>
+                                  <ExternalLink className="w-3.5 h-3.5 opacity-50" />
+                                </a>
+                              ) : (
+                                <Link
+                                  to={link.href}
+                                  className="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                                >
+                                  {link.label}
+                                </Link>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-gray-200 dark:border-gray-700 py-6">
-          <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
+        <div className="border-t border-gray-200 dark:border-gray-700 py-3">
+          <div className="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0">
             {/* Copyright */}
             <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
-              <span>© {currentYear} 谦舍. All rights reserved.</span>
+              <span>© {currentYear} 千舍</span>
             </div>
 
             {/* Built With */}
             <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
               <span>Built with</span>
-              <Heart className="w-4 h-4 text-red-500" />
-              <span>using modern web technologies</span>
+              <Heart className="w-4 h-4 text-red-500" fill="currentColor" />
             </div>
 
             {/* Social Links */}

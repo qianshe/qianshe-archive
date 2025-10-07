@@ -39,7 +39,7 @@ const Hero: React.FC = () => {
           {/* Main Title */}
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white mb-6">
             <span className="bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
-              谦舍
+              千舍
             </span>
           </h1>
 

@@ -2,19 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Github, ExternalLink, Star, Eye, Calendar, Code, Clock } from 'lucide-react';
 import { Project } from '@/types';
+import { formatDate, calculateDaysBetween } from '@/utils/date';
 
 interface ProjectCardProps {
   project: Project;
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
 
   const getStatusColor = (status: Project['status']) => {
     switch (status) {
@@ -66,6 +60,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
               alt={project.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               loading="lazy"
+              decoding="async"
             />
           </Link>
         </div>
@@ -195,7 +190,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
               <Clock className="w-4 h-4" />
               <span>
                 {project.end_date
-                  ? `${Math.ceil((new Date(project.end_date).getTime() - new Date(project.start_date).getTime()) / (1000 * 60 * 60 * 24))}天`
+                  ? `${calculateDaysBetween(project.start_date, project.end_date)}天`
                   : '进行中'}
               </span>
             </div>

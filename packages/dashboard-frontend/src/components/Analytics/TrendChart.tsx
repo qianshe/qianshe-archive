@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { format, subDays, subWeeks, subMonths } from 'date-fns';
 import { CustomLineChart, CustomAreaChart } from '../Charts';
 import { TrendingUp } from 'lucide-react';
 import { TrendChartProps } from '../../types/analytics';
+import { formatShortDate } from '../../utils/date';
 
 export const TrendChart: React.FC<TrendChartProps> = ({
   data,
@@ -16,32 +16,27 @@ export const TrendChart: React.FC<TrendChartProps> = ({
     onPeriodChange?.(period);
   };
 
-  const getDateRange = () => {
+  const getDisplayDateRange = () => {
     const now = new Date();
     let start: Date;
-    let formatStr: string;
-
+    
     switch (currentPeriod) {
       case 'day':
-        start = subDays(now, 30);
-        formatStr = 'MM/dd';
+        start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         break;
       case 'week':
-        start = subWeeks(now, 12);
-        formatStr = 'MM/dd';
+        start = new Date(now.getTime() - 12 * 7 * 24 * 60 * 60 * 1000);
         break;
       case 'month':
-        start = subMonths(now, 12);
-        formatStr = 'yyyy/MM';
+        start = new Date(now.getTime() - 12 * 30 * 24 * 60 * 60 * 1000);
         break;
       default:
-        start = subDays(now, 30);
-        formatStr = 'MM/dd';
+        start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     }
-
+    
     return {
-      start: format(start, formatStr),
-      end: format(now, formatStr)
+      start: formatShortDate(start),
+      end: formatShortDate(now)
     };
   };
 
@@ -71,7 +66,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({
               访问趋势
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-              {getDateRange().start} - {getDateRange().end}
+              {getDisplayDateRange().start} - {getDisplayDateRange().end}
             </p>
           </div>
 

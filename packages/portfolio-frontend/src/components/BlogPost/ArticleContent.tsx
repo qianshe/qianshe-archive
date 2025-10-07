@@ -1,27 +1,48 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import hljs from 'highlight.js/lib/core';
+// 导入常用语言
+import javascript from 'highlight.js/lib/languages/javascript';
+import typescript from 'highlight.js/lib/languages/typescript';
+import python from 'highlight.js/lib/languages/python';
+import java from 'highlight.js/lib/languages/java';
+import go from 'highlight.js/lib/languages/go';
+import rust from 'highlight.js/lib/languages/rust';
+import bash from 'highlight.js/lib/languages/bash';
+import json from 'highlight.js/lib/languages/json';
+import xml from 'highlight.js/lib/languages/xml';
+import css from 'highlight.js/lib/languages/css';
+import sql from 'highlight.js/lib/languages/sql';
+import 'highlight.js/styles/github-dark.css';
 import { BlogPost } from '@/types';
+import { formatDateTime, calculateReadTime } from '@/utils/date';
+import { sanitizeHtml } from '@/utils/sanitize';
+
+// 注册语言
+hljs.registerLanguage('javascript', javascript);
+hljs.registerLanguage('typescript', typescript);
+hljs.registerLanguage('python', python);
+hljs.registerLanguage('java', java);
+hljs.registerLanguage('go', go);
+hljs.registerLanguage('rust', rust);
+hljs.registerLanguage('bash', bash);
+hljs.registerLanguage('json', json);
+hljs.registerLanguage('xml', xml);
+hljs.registerLanguage('html', xml);
+hljs.registerLanguage('css', css);
+hljs.registerLanguage('sql', sql);
 
 interface ArticleContentProps {
   post: BlogPost;
 }
 
 const ArticleContent: React.FC<ArticleContentProps> = ({ post }) => {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+  // 代码高亮
+  useEffect(() => {
+    // 高亮所有代码块
+    document.querySelectorAll('pre code').forEach((block) => {
+      hljs.highlightElement(block as HTMLElement);
     });
-  };
-
-  const readTime = (content: string) => {
-    const wordsPerMinute = 200;
-    const wordCount = content.length;
-    const minutes = Math.ceil(wordCount / wordsPerMinute);
-    return minutes;
-  };
+  }, [post.content]);
 
   const getCategoryLabel = (category: string) => {
     switch (category) {
@@ -129,7 +150,7 @@ const ArticleContent: React.FC<ArticleContentProps> = ({ post }) => {
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              <span>{formatDate(post.published_at || post.created_at)}</span>
+              <span>{formatDateTime(post.published_at || post.created_at)}</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -141,7 +162,7 @@ const ArticleContent: React.FC<ArticleContentProps> = ({ post }) => {
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span>{readTime(post.content)} 分钟阅读</span>
+              <span>{calculateReadTime(post.content)} 分钟阅读</span>
             </div>
           </div>
         </div>
@@ -153,6 +174,8 @@ const ArticleContent: React.FC<ArticleContentProps> = ({ post }) => {
               src={post.cover_image}
               alt={post.title}
               className="w-full max-w-4xl mx-auto rounded-xl shadow-2xl"
+              loading="lazy"
+              decoding="async"
             />
           </div>
         )}
@@ -174,7 +197,7 @@ const ArticleContent: React.FC<ArticleContentProps> = ({ post }) => {
 
       {/* Article Content */}
       <div className="prose prose-lg dark:prose-invert max-w-none">
-        <div className="markdown-content" dangerouslySetInnerHTML={{ __html: post.content }} />
+        <div className="markdown-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }} />
       </div>
 
       {/* Article Footer */}

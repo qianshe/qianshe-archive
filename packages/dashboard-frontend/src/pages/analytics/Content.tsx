@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FileText, Folder, TrendingUp, Eye, Clock, MessageSquare } from 'lucide-react';
 import { CustomBarChart } from '../../components/Charts';
 import { useContentPerformance, useDateRange, DATE_PRESETS } from '../../hooks/useAnalytics';
+import { formatShortDate } from '../../utils/date';
 
 export const Content: React.FC = () => {
   const [contentType, setContentType] = useState<'posts' | 'projects'>('posts');
@@ -143,7 +144,7 @@ export const Content: React.FC = () => {
 
           {startDate && endDate && (
             <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-              {startDate.toLocaleDateString()} - {endDate.toLocaleDateString()}
+              {formatShortDate(startDate)} - {formatShortDate(endDate)}
             </div>
           )}
         </div>

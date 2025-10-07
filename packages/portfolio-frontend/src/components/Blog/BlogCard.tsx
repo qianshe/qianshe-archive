@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Eye, Heart, MessageCircle, Clock } from 'lucide-react';
 import { BlogPost } from '@/types';
+import { formatDate, calculateReadTime } from '@/utils/date';
 
 interface BlogCardProps {
   post: BlogPost;
@@ -9,20 +10,6 @@ interface BlogCardProps {
 }
 
 const BlogCard: React.FC<BlogCardProps> = ({ post, className = '' }) => {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  const readTime = (content: string) => {
-    const wordsPerMinute = 200;
-    const wordCount = content.length;
-    const minutes = Math.ceil(wordCount / wordsPerMinute);
-    return minutes;
-  };
 
   const getCategoryLabel = (category: string) => {
     switch (category) {
@@ -62,6 +49,7 @@ const BlogCard: React.FC<BlogCardProps> = ({ post, className = '' }) => {
             alt={post.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
+            decoding="async"
           />
         </Link>
       )}
@@ -128,7 +116,7 @@ const BlogCard: React.FC<BlogCardProps> = ({ post, className = '' }) => {
             </div>
             <div className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
-              <span>{readTime(post.content)} 分钟阅读</span>
+              <span>{calculateReadTime(post.content)} 分钟阅读</span>
             </div>
           </div>
 

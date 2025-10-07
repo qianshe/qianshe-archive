@@ -15,10 +15,10 @@ import {
 const AboutPage: React.FC = () => {
   // Mock data - 在实际项目中应该从API获取
   const personalInfo: PersonalInfo = {
-    name: '张三',
+    name: '千舍',
     title: '全栈开发工程师',
     bio: '我是一名充满热情的全栈开发工程师，专注于构建高质量的Web应用。拥有5年以上的开发经验，擅长前端开发、后端架构设计和DevOps。热爱开源技术，积极参与社区贡献，致力于通过技术创新解决实际问题。',
-    avatar: '/api/placeholder/150/150',
+    avatar: '/images/avatar.jpg',
     email: 'zhangsan@example.com',
     phone: '+86 138-0000-0000',
     location: '北京市朝阳区',
@@ -191,7 +191,7 @@ const AboutPage: React.FC = () => {
     <Layout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-500 to-blue-600 text-white py-16">
+        <div className="bg-emerald-600 dark:bg-emerald-700 text-white py-16">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <h1 className="text-4xl font-bold mb-4">关于我</h1>

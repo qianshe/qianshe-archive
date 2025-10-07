@@ -1,4 +1,5 @@
 import React from 'react';
+import EmptyState from '../../components/EmptyState';
 
 export const FilesPage: React.FC = () => {
   return (
@@ -9,7 +10,11 @@ export const FilesPage: React.FC = () => {
 
       <div className="card">
         <div className="card-body">
-          <p className="text-gray-600 dark:text-gray-400">文件管理功能正在开发中...</p>
+          <EmptyState
+            type="no-data"
+            title="文件管理功能正在开发中"
+            description="我们正在努力开发文件管理功能，敬请期待。"
+          />
         </div>
       </div>
     </div>

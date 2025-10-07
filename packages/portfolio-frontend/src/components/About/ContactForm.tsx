@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { Mail, Send, User, MessageSquare } from 'lucide-react';
 import { ContactForm } from '@/types';
 
@@ -35,6 +36,7 @@ const ContactFormComponent: React.FC<ContactFormProps> = ({ onSubmit }) => {
     try {
       await onSubmit(formData);
       setSubmitStatus('success');
+      toast.success('消息发送成功！我会尽快回复您。');
       // Reset form
       setFormData({
         name: '',
@@ -44,7 +46,9 @@ const ContactFormComponent: React.FC<ContactFormProps> = ({ onSubmit }) => {
       });
     } catch (error) {
       setSubmitStatus('error');
-      setErrorMessage(error instanceof Error ? error.message : '发送失败，请稍后重试');
+      const message = error instanceof Error ? error.message : '发送失败，请稍后重试';
+      setErrorMessage(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }

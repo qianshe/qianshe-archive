@@ -7,6 +7,7 @@ import {
   useDateRange,
   DATE_PRESETS
 } from '../../hooks/useAnalytics';
+import { formatShortDate } from '../../utils/date';
 
 // Referrer数据类型
 interface ReferrerInfo {
@@ -162,7 +163,7 @@ export const Traffic: React.FC = () => {
 
           {startDate && endDate && (
             <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-              {startDate.toLocaleDateString()} - {endDate.toLocaleDateString()}
+              {formatShortDate(startDate)} - {formatShortDate(endDate)}
             </div>
           )}
         </div>

@@ -7,6 +7,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 import './styles/globals.css';
 
 // 核心页面 - 直接导入
@@ -50,11 +51,12 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <Router>
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
+            <Router>
+              <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
               <Routes>
                 {/* 公开路由 */}
                 <Route path="/login" element={<LoginPage />} />
@@ -206,14 +208,15 @@ function App() {
                   }
                 }}
               />
-            </div>
-          </Router>
-        </AuthProvider>
-      </ThemeProvider>
+              </div>
+            </Router>
+          </AuthProvider>
+        </ThemeProvider>
 
-      {/* 开发环境显示React Query Devtools */}
-      {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
-    </QueryClientProvider>
+        {/* 开发环境显示React Query Devtools */}
+        {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

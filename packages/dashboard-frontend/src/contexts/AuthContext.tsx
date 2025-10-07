@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { AuthState, AuthContextType, AuthAction, AuthProviderProps } from '../types/react';
 import type { LoginResponse, RefreshTokenResponse } from '../types/services';
 import { authService } from '../services/authService';
+import { loggerService } from '../services/loggerService';
 import toast from 'react-hot-toast';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -80,8 +81,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             await refreshAccessToken();
           }
         } catch (error: unknown) {
-          // TODO: Replace with proper logging service
-          // logger.error('Auth initialization error:', { error });
+          loggerService.error('Auth initialization error', { 
+            error: error instanceof Error ? error.message : String(error)
+          });
           logout();
         }
       } else {
@@ -151,9 +153,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('refreshToken');
 
     // 调用登出API（不等待结果）
-    authService.logout().catch(() => {
-      // TODO: Replace with proper logging service
-      // logger.error('Logout API error');
+    authService.logout().catch((error) => {
+      loggerService.error('Logout API error', { 
+        error: error instanceof Error ? error.message : String(error)
+      });
     });
 
     dispatch({ type: 'LOGOUT' });
@@ -181,8 +184,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         dispatch({ type: 'REFRESH_TOKEN', payload: user });
       }
     } catch (error: unknown) {
-      // TODO: Replace with proper logging service
-      // logger.error('Token refresh failed:', { error });
+      loggerService.error('Token refresh failed', { 
+        error: error instanceof Error ? error.message : String(error)
+      });
       logout();
     }
   };

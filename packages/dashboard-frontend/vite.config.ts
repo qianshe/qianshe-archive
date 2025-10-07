@@ -2,12 +2,38 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src'),
+      '@components': resolve(__dirname, 'src/components'),
+      '@pages': resolve(__dirname, 'src/pages'),
+      '@hooks': resolve(__dirname, 'src/hooks'),
+      '@services': resolve(__dirname, 'src/services'),
+      '@utils': resolve(__dirname, 'src/utils'),
+      '@types': resolve(__dirname, 'src/types'),
+      '@styles': resolve(__dirname, 'src/styles'),
+      '@assets': resolve(__dirname, 'src/assets'),
+      '@shared': resolve(__dirname, '../shared')
+    }
+  },
+  server: {
+    port: 3001,
+    host: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8788', // Dashboard Worker dev server
+        changeOrigin: true,
+        secure: false
+      }
+    }
+  },
   build: {
     outDir: '../dashboard-worker/dist',
     emptyOutDir: true,
-    chunkSizeWarningLimit: 600, // 调整警告阈值到600KB
+    chunkSizeWarningLimit: 600, // dashboard较大，保持600KB阈值
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html')
@@ -26,22 +52,20 @@ export default defineConfig({
           'charts-vendor': ['recharts']
         }
       }
-    }
-  },
-  server: {
-    port: 3001,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8787',
-        changeOrigin: true
+    },
+    sourcemap: true,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true
       }
     }
   },
-  base: './',
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src'),
-      '@shared': resolve(__dirname, '../shared')
-    }
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom']
+  },
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version)
   }
 });

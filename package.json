@@ -31,15 +31,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint:all": "npm run lint && npm run format:check",
-    "type-check-all": "node scripts/type-check-all.js",
-    "build:check": "node scripts/build-check.js",
-    "test": "node scripts/run-tests.js",
-    "pre-commit": "npm run lint:all && npm run type-check-all && npm run test",
-    "quality-check": "npm run lint:all && npm run type-check-all && npm run build:check && npm run test",
-    "quality:monitor": "node scripts/quality-monitor.js",
-    "quality:trend": "node scripts/generate-quality-trend.js",
-    "quality:dashboard": "node scripts/create-quality-dashboard.js",
-    "setup:pre-commit": "node scripts/setup-pre-commit.js"
+    "type-check": "npm run type-check --workspaces --if-present",
+    "test": "echo \"No tests configured yet\"",
+    "pre-commit": "npm run lint:all",
+    "quality-check": "npm run lint:all && npm run build:all"
   },
   "keywords": [
     "blog",

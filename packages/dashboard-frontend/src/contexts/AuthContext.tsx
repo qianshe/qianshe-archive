@@ -76,17 +76,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem('accessToken');
-      const refreshToken = localStorage.getItem('refreshToken');
 
-      if (token && refreshToken) {
+      if (token) {
         try {
           // 验证token有效性
           const user = await authService.verifyToken();
           if (user) {
             dispatch({ type: 'AUTH_SUCCESS', payload: user });
           } else {
-            // token无效，尝试刷新
-            await refreshAccessToken();
+            // token无效，尝试刷新（如果有refreshToken）
+            const refreshToken = localStorage.getItem('refreshToken');
+            if (refreshToken) {
+              await refreshAccessToken();
+            } else {
+              logout();
+            }
           }
         } catch (error: unknown) {
           loggerService.error('Auth initialization error', { 
@@ -108,13 +112,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const apiResponse = await authService.login(username, password);
       const responseData = (apiResponse as unknown as { data?: LoginResponse }).data || apiResponse;
-      const { user, tokens } = responseData as LoginResponse;
+
+      // 兼容两种后端返回格式
+      const loginData = responseData as LoginResponse;
+      const accessToken = loginData.tokens?.accessToken || loginData.token;
+      const refreshToken = loginData.tokens?.refreshToken || loginData.token;
+
+      if (!accessToken) {
+        throw new Error('登录响应缺少 token');
+      }
 
       // 存储tokens
-      localStorage.setItem('accessToken', tokens.accessToken);
-      localStorage.setItem('refreshToken', tokens.refreshToken);
+      localStorage.setItem('accessToken', accessToken);
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken);
+      }
 
-      dispatch({ type: 'AUTH_SUCCESS', payload: user });
+      dispatch({ type: 'AUTH_SUCCESS', payload: loginData.user });
       toast.success('登录成功');
     } catch (error: unknown) {
       let message = '登录失败';
@@ -135,13 +149,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const apiResponse = await authService.adminLogin(password);
       const responseData = (apiResponse as unknown as { data?: LoginResponse }).data || apiResponse;
-      const { user, tokens } = responseData as LoginResponse;
+
+      // 兼容两种后端返回格式
+      const loginData = responseData as LoginResponse;
+      const accessToken = loginData.tokens?.accessToken || loginData.token;
+      const refreshToken = loginData.tokens?.refreshToken || loginData.token;
+
+      if (!accessToken) {
+        throw new Error('登录响应缺少 token');
+      }
 
       // 存储tokens
-      localStorage.setItem('accessToken', tokens.accessToken);
-      localStorage.setItem('refreshToken', tokens.refreshToken);
+      localStorage.setItem('accessToken', accessToken);
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken);
+      }
 
-      dispatch({ type: 'AUTH_SUCCESS', payload: user });
+      dispatch({ type: 'AUTH_SUCCESS', payload: loginData.user });
       toast.success('管理员登录成功');
     } catch (error: unknown) {
       let message = '登录失败';

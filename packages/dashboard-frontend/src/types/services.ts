@@ -223,10 +223,12 @@ export interface FileListResponse {
   totalPages: number;
 }
 
-// 认证响应类型
+// 认证响应类型（支持两种格式）
 export interface LoginResponse {
   user: User;
-  tokens: TokenPair;
+  tokens?: TokenPair; // 旧格式
+  token?: string; // 新格式（单个token）
+  expires_at?: string; // token过期时间
 }
 
 export interface RefreshTokenResponse {
@@ -236,6 +238,8 @@ export interface RefreshTokenResponse {
 export interface TokenPair {
   accessToken: string;
   refreshToken: string;
+  access_token?: string; // 兼容下划线格式
+  refresh_token?: string; // 兼容下划线格式
 }
 
 // 博客相关类型（扩展）

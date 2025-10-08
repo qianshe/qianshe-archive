@@ -1,3 +1,5 @@
+# Cloudflare Workers 配置（生产环境模板）
+# 本地开发请使用 wrangler.local.toml
 name = "qianshe-dashboard"
 main = "src/index.ts"
 compatibility_date = "2024-09-23"
@@ -7,72 +9,45 @@ compatibility_flags = ["nodejs_compat"]
 [site]
 bucket = "./dist"
 
-# 路由配置
+# 生产环境路由配置
 [env.production.routes]
 pattern = "admin.qianshe.dpdns.org/*"
 zone_name = "qianshe.dpdns.org"
 
-# 环境变量
-[vars]
-ENVIRONMENT = "development"
-SITE_URL = "http://localhost:8788"
-API_BASE_URL = "http://localhost:8788"
-JWT_SECRET = "dev-jwt-secret-change-in-production"
-ADMIN_EMAIL = "admin@qianshe.top"
-
-# 本地开发环境
-[env.development]
-vars = { ENVIRONMENT = "development" }
-
-[[env.development.d1_databases]]
-binding = "SHARED_DB"
-database_name = "my_d1"
-database_id = "your-d1-id-here"  # 请替换为你的 D1 database_id
-
-# KV存储（用于会话管理和缓存）
-[[env.development.kv_namespaces]]
-binding = "SESSIONS_KV"
-id = "your-sessions-kv-id-here"  # 会话KV ID
-preview_id = "your-sessions-kv-preview-id"
-
-[[env.development.kv_namespaces]]
-binding = "CACHE_KV"
-id = "your-base-kv-id-here"  # BASE_KV 的 ID
-preview_id = "your-base-kv-preview-id"
-
-# R2存储（用于文件上传）
-[[env.development.r2_buckets]]
-binding = "UPLOADS_BUCKET"
-bucket_name = "qianshe-uploads-dev"
-
-# 生产环境
-[env.production]
+# 生产环境变量（需在 Cloudflare Dashboard 或部署时配置）
 [env.production.vars]
-  ENVIRONMENT = "production"
-  SITE_URL = "https://admin.qianshe.dpdns.org"
-  API_BASE_URL = "https://admin.qianshe.dpdns.org"
-  JWT_SECRET = "your-production-jwt-secret"
-  ADMIN_EMAIL = "admin@qianshe.dpdns.org"
+ENVIRONMENT = "production"
+SITE_URL = "https://admin.qianshe.dpdns.org"
+API_BASE_URL = "https://admin.qianshe.dpdns.org"
+# JWT_SECRET - 在 Cloudflare Dashboard 中配置
+# ADMIN_PASSWORD - 在 Cloudflare Dashboard 中配置
+ADMIN_EMAIL = "admin@qianshe.dpdns.org"
 
-kv_namespaces = [
-  { binding = "SESSIONS_KV", id = "your-sessions-kv-id-here" },
-  { binding = "CACHE_KV", id = "your-base-kv-id-here" }  # BASE_KV
-]
+# 生产环境 KV 存储绑定
+[[env.production.kv_namespaces]]
+binding = "SESSIONS"
+id = "your-sessions-kv-id-here"
 
+[[env.production.kv_namespaces]]
+binding = "CACHE"
+id = "your-cache-kv-id-here"
+
+[[env.production.kv_namespaces]]
+binding = "SETTINGS"
+id = "your-settings-kv-id-here"
+
+# 生产环境 D1 数据库绑定
 [[env.production.d1_databases]]
 binding = "SHARED_DB"
-database_name = "my_d1"
-database_id = "your-d1-id-here"  # 同一个 D1 ID
+database_name = "qianshe-db"
+database_id = "your-d1-database-id-here"
 
+# 生产环境 R2 存储绑定
 [[env.production.r2_buckets]]
-binding = "UPLOADS_BUCKET"
+binding = "UPLOAD_BUCKET"
 bucket_name = "qianshe-uploads"
 
 # 性能和限制配置
 [limits]
 cpu_ms = 50000
 memory = "128MB"
-
-# 构建配置 - 前端已配置直接输出到 public 目录
-# [build]
-# command = "npm run build --workspace=dashboard-frontend"

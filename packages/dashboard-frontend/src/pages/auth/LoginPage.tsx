@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Eye, EyeOff, Lock, User } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -7,14 +7,21 @@ import { useAuth } from '../../contexts/AuthContext';
 interface LoginFormData {
   username: string;
   password: string;
+  rememberMe?: boolean;
 }
 
 interface AdminLoginFormData {
   password: string;
+  rememberMe?: boolean;
 }
+
+// LocalStorage keys
+const REMEMBER_USER_KEY = 'remember_user';
+const REMEMBER_ADMIN_KEY = 'remember_admin';
 
 export const LoginPage: React.FC = () => {
   const { login, adminLogin, isLoading, error, clearError } = useAuth();
+  const navigate = useNavigate();
   const [loginType, setLoginType] = useState<'user' | 'admin'>('user');
   const [showPassword, setShowPassword] = useState(false);
 
@@ -22,21 +29,54 @@ export const LoginPage: React.FC = () => {
   const {
     register: registerUser,
     handleSubmit: handleUserSubmit,
-    formState: { errors: userErrors }
-  } = useForm<LoginFormData>();
+    formState: { errors: userErrors },
+    setValue: setUserValue
+  } = useForm<LoginFormData>({
+    defaultValues: {
+      rememberMe: true
+    }
+  });
 
   // 管理员登录表单
   const {
     register: registerAdmin,
     handleSubmit: handleAdminSubmit,
     formState: { errors: adminErrors }
-  } = useForm<AdminLoginFormData>();
+  } = useForm<AdminLoginFormData>({
+    defaultValues: {
+      rememberMe: true
+    }
+  });
+
+  // 页面加载时恢复记住的账号
+  useEffect(() => {
+    const rememberedUser = localStorage.getItem(REMEMBER_USER_KEY);
+    if (rememberedUser) {
+      setUserValue('username', rememberedUser);
+    }
+
+    // 检查管理员记住状态（只是设置loginType，不填充密码）
+    const rememberAdmin = localStorage.getItem(REMEMBER_ADMIN_KEY);
+    if (rememberAdmin === 'true') {
+      setLoginType('admin');
+    }
+  }, [setUserValue]);
 
   // 处理用户登录
   const onUserLogin = async (data: LoginFormData) => {
     try {
       clearError();
       await login(data.username, data.password);
+
+      // 保存或清除记住的用户名
+      if (data.rememberMe) {
+        localStorage.setItem(REMEMBER_USER_KEY, data.username);
+      } else {
+        localStorage.removeItem(REMEMBER_USER_KEY);
+      }
+
+      // 登录成功，跳转到首页
+      navigate('/');
     } catch (_error) {
       // 错误已在AuthContext中处理
     }
@@ -47,6 +87,16 @@ export const LoginPage: React.FC = () => {
     try {
       clearError();
       await adminLogin(data.password);
+
+      // 保存管理员登录状态（记住选择管理员登录方式）
+      if (data.rememberMe) {
+        localStorage.setItem(REMEMBER_ADMIN_KEY, 'true');
+      } else {
+        localStorage.removeItem(REMEMBER_ADMIN_KEY);
+      }
+
+      // 登录成功，跳转到首页
+      navigate('/');
     } catch (_error) {
       // 错误已在AuthContext中处理
     }
@@ -165,6 +215,22 @@ export const LoginPage: React.FC = () => {
                 )}
               </div>
 
+              {/* 记住我 */}
+              <div className="flex items-center">
+                <input
+                  {...registerUser('rememberMe')}
+                  id="remember-user"
+                  type="checkbox"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label
+                  htmlFor="remember-user"
+                  className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+                >
+                  记住账号
+                </label>
+              </div>
+
               {/* 错误信息 */}
               {error && (
                 <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
@@ -227,6 +293,22 @@ export const LoginPage: React.FC = () => {
                     {adminErrors.password.message}
                   </p>
                 )}
+              </div>
+
+              {/* 管理员记住我 */}
+              <div className="flex items-center">
+                <input
+                  {...registerAdmin('rememberMe')}
+                  id="remember-admin"
+                  type="checkbox"
+                  className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                />
+                <label
+                  htmlFor="remember-admin"
+                  className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+                >
+                  下次默认使用管理员登录
+                </label>
               </div>
 
               {/* 错误信息 */}

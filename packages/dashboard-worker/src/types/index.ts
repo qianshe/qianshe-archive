@@ -31,6 +31,9 @@ export interface DashboardEnv {
   // Dashboard 特定
   ADMIN_EMAIL: string;
   ADMIN_PASSWORD: string;
+  ENVIRONMENT: string;
+  SITE_URL: string;
+  API_BASE_URL: string;
   WEBHOOK_URL?: string;
   MONITORING_ENABLED?: string;
   ANALYTICS_ENABLED?: string;
@@ -38,7 +41,10 @@ export interface DashboardEnv {
   // 缓存和会话
   CACHE: KVNamespace;
   SESSIONS: KVNamespace;
-  SETTINGS: KVNamespace;
+  SETTINGS?: KVNamespace;
+
+  // 静态资源
+  __STATIC_CONTENT?: KVNamespace;
 
   // 队列
   EMAIL_QUEUE?: Queue;

@@ -107,6 +107,10 @@ pids
 
 # Cloudflare specific
 wrangler.toml.local
+wrangler.local.toml
+**/wrangler.local.toml
+.dev.vars
+**/.dev.vars
 .wrangler/
 **/.wrangler/
 

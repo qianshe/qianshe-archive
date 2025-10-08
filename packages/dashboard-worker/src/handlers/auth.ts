@@ -204,9 +204,26 @@ authRoutes.post('/admin-login', async (c) => {
       .parse(body);
 
     // 验证管理员密码
-    if (password !== c.env.ADMIN_PASSWORD) {
+    const envPassword = c.env.ADMIN_PASSWORD?.trim();
+    const inputPassword = password.trim();
+    
+    console.log('[DEBUG] Admin login attempt:', {
+      passwordProvided: !!inputPassword,
+      envPasswordExists: !!envPassword,
+      passwordLength: inputPassword.length,
+      envPasswordLength: envPassword?.length || 0
+    });
+
+    if (!envPassword) {
+      throw createError.unauthorized('Server configuration error: ADMIN_PASSWORD not set');
+    }
+
+    if (inputPassword !== envPassword) {
+      console.log('[DEBUG] Password mismatch');
       throw createError.unauthorized('Invalid admin password');
     }
+    
+    console.log('[DEBUG] Password verified successfully');
 
     // 查找或创建管理员用户
     let adminUser = await c.env.SHARED_DB.prepare(

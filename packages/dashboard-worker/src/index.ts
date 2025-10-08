@@ -14,7 +14,7 @@ import { settingsRoutes } from './handlers/settings';
 // import { errorHandler } from './middleware/errorHandler';
 import { DatabaseOptimizer } from './middleware/database';
 import { AuthOptimizer, permissionConfigs } from './middleware/auth';
-import type { AdminUser } from './types';
+import type { AdminUser, DashboardEnv } from './types';
 
 // 中间件变量类型
 interface Variables {
@@ -24,23 +24,10 @@ interface Variables {
   middleware?: ReturnType<typeof createMiddlewareInstances>;
 }
 
-type Bindings = {
-  SHARED_DB: D1Database;
-  SESSIONS_KV: KVNamespace;
-  CACHE_KV: KVNamespace;
-  UPLOADS_BUCKET: R2Bucket;
-  JWT_SECRET: string;
-  ADMIN_EMAIL: string;
-  ENVIRONMENT: string;
-  SITE_URL: string;
-  API_BASE_URL: string;
-  __STATIC_CONTENT?: KVNamespace;
-};
-
 // 创建性能优化中间件实例（添加两级缓存支持）
-const createMiddlewareInstances = (env: Bindings) => {
-  const dbOptimizer = new DatabaseOptimizer(env.SHARED_DB, env.CACHE_KV); // 传入 KV 缓存
-  const authOptimizer = new AuthOptimizer(env.JWT_SECRET, env.SESSIONS_KV);
+const createMiddlewareInstances = (env: DashboardEnv) => {
+  const dbOptimizer = new DatabaseOptimizer(env.SHARED_DB, env.CACHE); // 传入 KV 缓存
+  const authOptimizer = new AuthOptimizer(env.JWT_SECRET, env.SESSIONS);
 
   return {
     dbOptimizer,
@@ -82,7 +69,7 @@ const getCacheControlHeader = (pathname: string): string => {
   return 'public, max-age=3600'; // 1小时
 };
 
-const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+const app = new Hono<{ Bindings: DashboardEnv; Variables: Variables }>();
 
 // 初始化中间件实例（仅创建一次）
 app.use('*', async (c, next) => {
@@ -135,7 +122,7 @@ app.use(
       'https://dashboard.qianshe.top'
     ],
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Request-ID'],
     credentials: true,
     maxAge: 86400
   })
@@ -415,7 +402,7 @@ export default {
   fetch: app.fetch,
 
   // 可选：添加定时任务处理器
-  async scheduled(event: ScheduledEvent, env: Bindings, ctx: ExecutionContext): Promise<void> {
+  async scheduled(event: ScheduledEvent, env: DashboardEnv, ctx: ExecutionContext): Promise<void> {
     // 每小时执行的清理任务
     if (event.cron === '0 * * * *') {
       if (env.ENVIRONMENT === 'development') {

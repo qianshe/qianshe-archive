@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -17,7 +17,9 @@ import {
   Sun,
   Moon,
   User,
-  Bell
+  Bell,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -35,6 +37,17 @@ export const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notificationMenuOpen, setNotificationMenuOpen] = useState(false);
+
+  // 桌面端侧边栏折叠状态（使用localStorage持久化）
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    const saved = localStorage.getItem('sidebarCollapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  // 持久化侧边栏折叠状态
+  useEffect(() => {
+    localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed));
+  }, [sidebarCollapsed]);
 
   // 导航菜单配置
   const navigation: NavigationItem[] = [
@@ -67,60 +80,90 @@ export const Layout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
-      {/* 侧边栏 */}
-      <aside className="hidden lg:flex lg:flex-shrink-0">
-        <div className="w-64 bg-white dark:bg-gray-800 shadow-xl border-r border-gray-200 dark:border-gray-700 flex flex-col h-screen">
-          {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-5 border-b border-gray-200 dark:border-gray-700">
+      {/* 桌面端侧边栏 - Fixed定位 + 折叠功能 */}
+      <motion.aside
+        initial={false}
+        animate={{
+          width: sidebarCollapsed ? 64 : 256
+        }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className="hidden lg:flex fixed left-0 top-0 h-screen z-40 bg-white dark:bg-gray-800 shadow-xl border-r border-gray-200 dark:border-gray-700 flex-col"
+      >
+        {/* Logo */}
+        <div className="flex items-center justify-between h-16 px-3 border-b border-gray-200 dark:border-gray-700">
+          {!sidebarCollapsed ? (
             <div className="flex items-center space-x-3">
               <div className="w-9 h-9 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
                 <span className="text-white font-bold text-xl">谦</span>
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+              <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent whitespace-nowrap">
                 谦舍
               </span>
             </div>
-          </div>
-
-          {/* 导航菜单 */}
-          <nav className="flex-1 px-4 py-5 space-y-1.5 overflow-y-auto">
-            {filteredNavigation.map(item => {
-              const isActive = location.pathname === item.href;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`group flex items-center px-3.5 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-                    isActive
-                      ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 shadow-sm dark:from-blue-900/30 dark:to-indigo-900/30 dark:text-blue-300'
-                      : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50 hover:translate-x-0.5'
-                  }`}
-                >
-                  <item.icon
-                    className={`mr-3.5 h-5 w-5 flex-shrink-0 transition-transform duration-200 ${
-                      isActive
-                        ? 'text-blue-600 dark:text-blue-400 scale-110'
-                        : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 group-hover:scale-105'
-                    }`}
-                  />
-                  {item.name}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* 底部操作 */}
-          <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700">
-            <button
-              onClick={logout}
-              className="w-full flex items-center justify-center px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 group"
-            >
-              <LogOut className="mr-2.5 h-5 w-5 group-hover:rotate-12 transition-transform duration-200" />
-              退出登录
-            </button>
-          </div>
+          ) : (
+            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-md mx-auto">
+              <span className="text-white font-bold text-xl">谦</span>
+            </div>
+          )}
         </div>
-      </aside>
+
+        {/* 导航菜单 */}
+        <nav className="flex-1 px-2 py-5 space-y-1.5 overflow-y-auto">
+          {filteredNavigation.map(item => {
+            const isActive = location.pathname === item.href;
+            return (
+              <Link
+                key={item.name}
+                to={item.href}
+                title={sidebarCollapsed ? item.name : undefined}
+                className={`group flex items-center ${sidebarCollapsed ? 'justify-center px-2' : 'px-3.5'} py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+                  isActive
+                    ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 shadow-sm dark:from-blue-900/30 dark:to-indigo-900/30 dark:text-blue-300'
+                    : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50 hover:translate-x-0.5'
+                }`}
+              >
+                <item.icon
+                  className={`${sidebarCollapsed ? '' : 'mr-3.5'} h-5 w-5 flex-shrink-0 transition-transform duration-200 ${
+                    isActive
+                      ? 'text-blue-600 dark:text-blue-400 scale-110'
+                      : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 group-hover:scale-105'
+                  }`}
+                />
+                {!sidebarCollapsed && <span className="whitespace-nowrap">{item.name}</span>}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* 底部操作 */}
+        <div className="px-3 py-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+          {/* 折叠按钮 */}
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="w-full flex items-center justify-center px-3 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group"
+            title={sidebarCollapsed ? '展开侧边栏' : '收起侧边栏'}
+          >
+            {sidebarCollapsed ? (
+              <ChevronRight className="h-5 w-5 group-hover:translate-x-0.5 transition-transform duration-200" />
+            ) : (
+              <>
+                <ChevronLeft className="mr-2.5 h-5 w-5 group-hover:-translate-x-0.5 transition-transform duration-200" />
+                <span className="whitespace-nowrap">收起侧边栏</span>
+              </>
+            )}
+          </button>
+
+          {/* 退出登录 */}
+          <button
+            onClick={logout}
+            title={sidebarCollapsed ? '退出登录' : undefined}
+            className="w-full flex items-center justify-center px-3 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 group"
+          >
+            <LogOut className={`${sidebarCollapsed ? '' : 'mr-2.5'} h-5 w-5 group-hover:rotate-12 transition-transform duration-200`} />
+            {!sidebarCollapsed && <span className="whitespace-nowrap">退出登录</span>}
+          </button>
+        </div>
+      </motion.aside>
 
       {/* 移动端侧边栏 */}
       <motion.aside
@@ -191,8 +234,8 @@ export const Layout: React.FC = () => {
         </div>
       </motion.aside>
 
-      {/* 主内容区域 */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* 主内容区域 - 动态适配侧边栏宽度 */}
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}>
         {/* 顶部导航栏 */}
         <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">

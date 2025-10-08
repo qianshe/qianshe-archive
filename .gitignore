@@ -107,6 +107,8 @@ pids
 
 # Cloudflare specific
 wrangler.toml.local
+.wrangler/
+**/.wrangler/
 
 # TypeScript build info
 *.tsbuildinfo

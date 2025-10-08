@@ -100,6 +100,46 @@ export class SystemHandler {
     }
   }
 
+  // 获取分析概览
+  async getAnalyticsOverview(c: Context) {
+    try {
+      // 返回基本的统计概览数据
+      const overview = {
+        total_visits: 0,
+        total_page_views: 0,
+        unique_visitors: 0,
+        avg_session_duration: 0,
+        bounce_rate: 0
+      };
+      return successResponse(c, overview);
+    } catch (error) {
+      console.error('Get analytics overview error:', error);
+      return errorResponse(c, 'Failed to get analytics overview', 500);
+    }
+  }
+
+  // 获取分析趋势
+  async getAnalyticsTrends(c: Context) {
+    try {
+      const startDate = c.req.query('start_date');
+      const endDate = c.req.query('end_date');
+      const period = c.req.query('period') || 'day';
+
+      // 返回空的趋势数据
+      const trends = {
+        labels: [],
+        datasets: [{
+          label: 'Page Views',
+          data: []
+        }]
+      };
+      return successResponse(c, trends);
+    } catch (error) {
+      console.error('Get analytics trends error:', error);
+      return errorResponse(c, 'Failed to get analytics trends', 500);
+    }
+  }
+
   // 健康检查
   async healthCheck(c: Context) {
     try {

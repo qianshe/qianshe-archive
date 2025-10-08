@@ -16,7 +16,7 @@ export function corsHandler(env: Env) {
 
     // 处理预检请求
     if (c.req.method === 'OPTIONS') {
-      return c.text('', 200);
+      return new Response(null, { status: 204 });
     }
 
     await next();

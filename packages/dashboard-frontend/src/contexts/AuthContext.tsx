@@ -19,7 +19,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
       return {
         ...state,
         user: action.payload,
-        isAuthenticated: true,
+        isAuthenticated: action.payload !== null, // 修复：只有存在有效用户信息时才认证
         isLoading: false,
         error: null
       };
@@ -30,6 +30,14 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         isAuthenticated: false,
         isLoading: false,
         error: action.payload
+      };
+    case 'AUTH_INIT_COMPLETE':
+      return {
+        ...state,
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: null
       };
     case 'LOGOUT':
       return {
@@ -87,7 +95,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           logout();
         }
       } else {
-        dispatch({ type: 'AUTH_SUCCESS', payload: null });
+        // 无 token 时设置为未认证状态，但不显示错误信息
+        dispatch({ type: 'AUTH_INIT_COMPLETE' });
       }
     };
 

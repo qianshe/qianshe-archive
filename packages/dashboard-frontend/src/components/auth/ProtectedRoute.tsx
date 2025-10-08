@@ -24,8 +24,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
     );
   }
 
-  // 未认证，重定向到登录页
-  if (!isAuthenticated) {
+  // 未认证或无用户信息，重定向到登录页（双重验证确保安全）
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

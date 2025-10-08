@@ -231,7 +231,7 @@ export class ResponseOptimizer {
     this.setResponseHeaders(headers);
 
     return new Response(null, {
-      status: 200,
+      status: 204,
       headers
     });
   }

@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { RequestConfig, ApiMethods } from '../types/services';
 
 // API基础配置
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8788/api';
 
 // 创建axios实例
 export const api: AxiosInstance = axios.create({

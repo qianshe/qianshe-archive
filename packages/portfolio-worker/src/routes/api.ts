@@ -63,6 +63,8 @@ export function createApiRoutes(env: Env): Hono<{ Bindings: Env }> {
   app.get('/links', systemHandler.getLinks.bind(systemHandler));
   app.post('/analytics/track', systemHandler.trackAnalytics.bind(systemHandler));
   app.get('/analytics', systemHandler.getAnalytics.bind(systemHandler));
+  app.get('/analytics/overview', systemHandler.getAnalyticsOverview.bind(systemHandler));
+  app.get('/analytics/trends', systemHandler.getAnalyticsTrends.bind(systemHandler));
   app.get('/analytics/popular', systemHandler.getPopularPages.bind(systemHandler));
 
   // 404处理

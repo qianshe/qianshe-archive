@@ -1,33 +1,13 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { subDays, subWeeks, subMonths } from 'date-fns';
+import { apiRequest } from '../services/api';
 
-// API 获取函数
+// API 获取函数 - 使用统一的 api 服务
 const fetchAnalytics = async (endpoint: string, params?: Record<string, any>) => {
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787';
-  const url = new URL(`${baseUrl}/api/analytics/${endpoint}`);
-
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        url.searchParams.append(key, String(value));
-      }
-    });
-  }
-
-  const response = await fetch(url.toString(), {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-      'Content-Type': 'application/json'
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch analytics data: ${response.statusText}`);
-  }
-
-  const result = await response.json();
-  return result.data;
+  const url = `/analytics/${endpoint}`;
+  const response = await apiRequest.get<{ data: any }>(url, { params });
+  return response.data;
 };
 
 // 获取概览统计

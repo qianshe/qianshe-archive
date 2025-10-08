@@ -128,7 +128,12 @@ app.use('*', async (c, next) => {
 app.use(
   '*',
   cors({
-    origin: ['http://localhost:3000', 'http://localhost:8788', 'https://dashboard.qianshe.top'],
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:8788',
+      'http://127.0.0.1:8788',
+      'https://dashboard.qianshe.top'
+    ],
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     credentials: true,
@@ -200,6 +205,12 @@ app.post('/api/analytics/track', async c => {
 
 // 受保护的路由中间件
 app.use('/api/*', async (c, next) => {
+  // 跳过 OPTIONS 请求的认证检查（CORS 预检）
+  if (c.req.method === 'OPTIONS') {
+    // 让 CORS 中间件已经处理了响应头，直接返回成功
+    return new Response(null, { status: 204 });
+  }
+
   const middleware = c.get('middleware')!;
   // 应用认证中间件
   const authMiddleware = middleware.authOptimizer.middleware();

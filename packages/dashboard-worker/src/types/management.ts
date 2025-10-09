@@ -19,6 +19,7 @@ interface BlogPost {
   like_count: number;
   comment_count: number;
   is_featured: boolean;
+  is_top: boolean;
   published_at?: string;
   created_at: string;
   updated_at: string;

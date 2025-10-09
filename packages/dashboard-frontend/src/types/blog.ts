@@ -1,22 +1,34 @@
+// 博客分类类型
+export interface BlogCategory {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  created_at: string;
+}
+
 // Dashboard管理端博客文章类型定义
 export interface BlogPost {
   id: number;
   title: string;
   slug: string;
-  category: 'blog' | 'project' | 'announcement';
+  category: BlogCategory;
   tags: string[];
   content: string;
   excerpt?: string;
   cover_image?: string;
+  featured_image?: string; // 后端使用此字段
   author_id: number;
+  author_name?: string;
+  author_avatar?: string;
   status: 'draft' | 'published' | 'archived';
   view_count: number;
   like_count: number;
   comment_count: number;
   is_featured: boolean;
   is_top: boolean;
-  seo_title?: string;
-  seo_description?: string;
+  meta_title?: string;
+  meta_description?: string;
   created_at: string;
   updated_at: string;
   published_at?: string;
@@ -46,17 +58,18 @@ export interface BlogPostListResponse {
 export interface BlogPostRequest {
   title: string;
   slug?: string;
-  category: 'blog' | 'project' | 'announcement';
-  tags: string[];
+  category?: 'blog' | 'project' | 'announcement';
+  tags?: string[]; // 前端使用数组，API层会处理序列化
   content: string;
   excerpt?: string;
-  cover_image?: string;
-  author_id?: number;
+  featured_image?: string;
   status: 'draft' | 'published' | 'archived';
   is_featured?: boolean;
   is_top?: boolean;
-  seo_title?: string;
-  seo_description?: string;
+  reading_time?: number;
+  meta_title?: string;
+  meta_description?: string;
+  meta_keywords?: string;
   published_at?: string;
 }
 

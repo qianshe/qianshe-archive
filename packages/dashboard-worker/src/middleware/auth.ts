@@ -68,12 +68,14 @@ export class AuthOptimizer {
         return null;
       }
 
+      const userId = typeof decoded.sub === 'string' ? parseInt(decoded.sub) : decoded.sub;
       return {
-        id: typeof decoded.sub === 'string' ? parseInt(decoded.sub) : decoded.sub,
+        id: userId,
+        userId: userId, // 确保 userId 和 id 一致
         email: decoded.email || '',
         role: decoded.role as UserRole,
         permissions: decoded.permissions || []
-      };
+      } as unknown as MiddlewareUser;
     } catch (error) {
       return null;
     }

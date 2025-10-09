@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { RequestConfig, ApiMethods } from '../types/services';
 
 // API基础配置
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8788/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8788/api';
 
 // 创建axios实例
 export const api: AxiosInstance = axios.create({
@@ -163,6 +163,135 @@ export const apiRequest: ApiMethods = {
         'Content-Type': 'multipart/form-data'
       }
     });
+    return response.data;
+  }
+};
+
+// 文章管理 API
+export const postsApi = {
+  /**
+   * 获取文章列表
+   */
+  getPosts: async (query: import('../types/blog').BlogPostQuery): Promise<import('../types/blog').BlogPostListResponse> => {
+    const params = new URLSearchParams();
+    if (query.page) params.append('page', query.page.toString());
+    if (query.limit) params.append('limit', query.limit.toString());
+    if (query.category) params.append('category', query.category);
+    if (query.status) params.append('status', query.status);
+    if (query.search) params.append('search', query.search);
+    if (query.featured !== undefined) params.append('featured', query.featured.toString());
+    if (query.author_id) params.append('author_id', query.author_id.toString());
+
+    const response = await apiRequest.get<{
+      success: boolean;
+      data: import('../types/blog').BlogPost[];
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+        hasNext: boolean;
+        hasPrev: boolean;
+      };
+    }>(`/posts?${params.toString()}`);
+
+    // 转换后端响应格式为前端期望的格式
+    return {
+      posts: response.data,
+      total: response.pagination.total,
+      page: response.pagination.page,
+      limit: response.pagination.limit,
+      totalPages: response.pagination.totalPages
+    };
+  },
+
+  /**
+   * 获取单篇文章
+   */
+  getPost: async (id: number): Promise<import('../types/blog').BlogPost> => {
+    const response = await apiRequest.get<{ data: import('../types/blog').BlogPost }>(`/posts/${id}`);
+    return response.data;
+  },
+
+  /**
+   * 创建文章
+   */
+  createPost: async (data: import('../types/blog').BlogPostRequest): Promise<import('../types/blog').BlogPost> => {
+    const response = await apiRequest.post<{ data: import('../types/blog').BlogPost }>('/posts', data);
+    return response.data;
+  },
+
+  /**
+   * 更新文章
+   */
+  updatePost: async (
+    id: number,
+    data: import('../types/blog').BlogPostRequest
+  ): Promise<import('../types/blog').BlogPost> => {
+    const response = await apiRequest.put<{ data: import('../types/blog').BlogPost }>(`/posts/${id}`, data);
+    return response.data;
+  },
+
+  /**
+   * 删除单篇文章
+   */
+  deletePost: async (id: number): Promise<void> => {
+    await apiRequest.delete(`/posts/${id}`);
+  },
+
+  /**
+   * 批量删除文章
+   */
+  deletePosts: async (ids: number[]): Promise<void> => {
+    await apiRequest.post('/posts/batch-delete', { ids });
+  },
+
+  /**
+   * 获取文章统计信息
+   */
+  getStats: async (): Promise<import('../types/blog').BlogPostStats> => {
+    const response = await apiRequest.get<{ data: import('../types/blog').BlogPostStats }>('/posts/stats');
+    return response.data;
+  },
+
+  /**
+   * 上传文章封面图片
+   */
+  uploadCoverImage: async (file: File): Promise<{ url: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiRequest.upload<{ data: { url: string } }>('/posts/upload-cover', formData);
+    return response.data;
+  },
+
+  /**
+   * 更新文章状态
+   */
+  updateStatus: async (
+    id: number,
+    status: 'draft' | 'published' | 'archived'
+  ): Promise<import('../types/blog').BlogPost> => {
+    const response = await apiRequest.patch<{ data: import('../types/blog').BlogPost }>(`/posts/${id}/status`, {
+      status
+    });
+    return response.data;
+  },
+
+  /**
+   * 切换置顶状态
+   */
+  toggleTop: async (id: number): Promise<import('../types/blog').BlogPost> => {
+    const response = await apiRequest.patch<{ data: import('../types/blog').BlogPost }>(`/posts/${id}/toggle-top`);
+    return response.data;
+  },
+
+  /**
+   * 切换推荐状态
+   */
+  toggleFeatured: async (id: number): Promise<import('../types/blog').BlogPost> => {
+    const response = await apiRequest.patch<{ data: import('../types/blog').BlogPost }>(
+      `/posts/${id}/toggle-featured`
+    );
     return response.data;
   }
 };

@@ -31,18 +31,43 @@ const postRoutes = new Hono<{
 const postSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
   slug: z.string().min(1, 'Slug is required').max(200, 'Slug too long'),
-  excerpt: z.string().optional(),
+  excerpt: z.string().default(''),
   content: z.string().min(1, 'Content is required'),
-  featured_image: z.string().url().optional(),
+  cover_image: z.string().default('').refine((val) => {
+    if (!val || val.trim() === '') return true; // 允许空值
+    try {
+      new URL(val);
+      return true;
+    } catch {
+      return false;
+    }
+  }, { message: 'Invalid url format' }),
   status: z.enum(['draft', 'published', 'private', 'archived']),
-  category: z.enum(['blog', 'project', 'announcement']).optional(),
-  tags: z.string().optional(), // JSON string array
-  meta_description: z.string().optional(),
-  meta_keywords: z.string().optional(),
-  reading_time: z.number().min(0).optional(),
+  category: z.enum(['blog', 'project', 'announcement']).default('blog'),
+  tags: z.union([z.string(), z.array(z.string())]).default([]).transform((val) => {
+    if (Array.isArray(val)) {
+      return JSON.stringify(val);
+    }
+    if (typeof val === 'string') {
+      try {
+        // 尝试解析JSON字符串
+        const parsed = JSON.parse(val);
+        if (Array.isArray(parsed)) {
+          return JSON.stringify(parsed);
+        }
+      } catch {
+        // 如果不是JSON，则按逗号分割
+        return JSON.stringify(val.split(',').map(tag => tag.trim()).filter(Boolean));
+      }
+    }
+    return JSON.stringify([]);
+  }),
+  meta_description: z.string().default(''),
+  meta_keywords: z.string().default(''),
+  reading_time: z.number().min(0).default(0),
   is_featured: z.boolean().default(false),
   published_at: z.string().optional()
-});
+});;;
 
 // 查询参数验证模式
 const querySchema = z.object({
@@ -74,12 +99,13 @@ interface DatabaseBlogPost extends Record<string, unknown> {
   slug: string;
   content: string;
   excerpt?: string;
-  featured_image?: string;
+  cover_image?: string;
   category?: string;
   category_id?: number;
   tags?: string;
   status: string;
   is_featured: number;
+  is_top: number;
   view_count?: number;
   like_count?: number;
   comment_count?: number;
@@ -98,7 +124,7 @@ function mapDbRowToBlogPost(row: Record<string, unknown>): DashboardBlogPost {
     slug: row.slug as string,
     content: row.content as string,
     excerpt: row.excerpt as string,
-    featured_image: row.featured_image as string,
+    featured_image: row.cover_image as string,
     category: {
       id: parseInt(String(row.category_id)) || 1,
       name: row.category as string,
@@ -109,6 +135,7 @@ function mapDbRowToBlogPost(row: Record<string, unknown>): DashboardBlogPost {
     tags: JSON.parse(String(row.tags || '[]')),
     status: row.status as BlogStatus,
     is_featured: Boolean(row.is_featured),
+    is_top: Boolean(row.is_top),
     view_count: row.view_count as number || 0,
     like_count: row.like_count as number || 0,
     comment_count: row.comment_count as number || 0,
@@ -217,7 +244,142 @@ postRoutes.get('/', async (c) => {
   }
 });
 
-// 获取单篇文章
+// 获取文章统计信息（必须在 /:id 之前定义）
+postRoutes.get('/stats', async (c) => {
+  try {
+    const user = c.get('user');
+
+    // 构建WHERE条件（非管理员只能统计自己的文章）
+    const whereCondition = user.role !== 'admin' ? 'WHERE author_id = ?' : '';
+    const params = user.role !== 'admin' ? [user.userId] : [];
+
+    // 执行统计查询
+    const statsQuery = `
+      SELECT
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END) as published,
+        SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft,
+        SUM(CASE WHEN status = 'archived' THEN 1 ELSE 0 END) as archived,
+        COALESCE(SUM(view_count), 0) as totalViews,
+        COALESCE(SUM(like_count), 0) as totalLikes,
+        COALESCE(SUM(comment_count), 0) as totalComments
+      FROM posts
+      ${whereCondition}
+    `;
+
+    const statsResult = await c.env.SHARED_DB.prepare(statsQuery)
+      .bind(...params)
+      .first();
+
+    if (!statsResult) {
+      throw createError.internal('Failed to fetch statistics');
+    }
+
+    const response: ApiResponse<{
+      total: number;
+      published: number;
+      draft: number;
+      archived: number;
+      totalViews: number;
+      totalLikes: number;
+      totalComments: number;
+    }> = {
+      success: true,
+      data: {
+        total: Number(statsResult.total) || 0,
+        published: Number(statsResult.published) || 0,
+        draft: Number(statsResult.draft) || 0,
+        archived: Number(statsResult.archived) || 0,
+        totalViews: Number(statsResult.totalViews) || 0,
+        totalLikes: Number(statsResult.totalLikes) || 0,
+        totalComments: Number(statsResult.totalComments) || 0
+      },
+      timestamp: Date.now()
+    };
+
+    return c.json(response);
+  } catch (error) {
+    throw error;
+  }
+});
+
+// 批量操作（必须在 /:id 之前定义）
+postRoutes.post('/batch', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { action, postIds } = z
+      .object({
+        action: z.enum(['delete', 'publish', 'draft', 'archive']),
+        postIds: z.array(z.number()).min(1)
+      })
+      .parse(body);
+
+    const user = c.get('user');
+    const results = [];
+
+    for (const postId of postIds) {
+      try {
+        // 检查权限
+        const canModify = await canAccessResource(c, 'post', postId);
+        if (!canModify) {
+          results.push({ id: postId, success: false, error: 'Permission denied' });
+          continue;
+        }
+
+        // 执行操作
+        let updateQuery = '';
+        switch (action) {
+          case 'delete':
+            updateQuery =
+              'UPDATE posts SET status = "archived", updated_at = datetime("now") WHERE id = ?';
+            break;
+          case 'publish':
+            updateQuery =
+              'UPDATE posts SET status = "published", published_at = datetime("now"), updated_at = datetime("now") WHERE id = ?';
+            break;
+          case 'draft':
+            updateQuery =
+              'UPDATE posts SET status = "draft", updated_at = datetime("now") WHERE id = ?';
+            break;
+          case 'archive':
+            updateQuery =
+              'UPDATE posts SET status = "archived", updated_at = datetime("now") WHERE id = ?';
+            break;
+        }
+
+        await c.env.SHARED_DB.prepare(updateQuery).bind(postId).run();
+        results.push({ id: postId, success: true });
+      } catch (error) {
+        results.push({ id: postId, success: false, error: 'Operation failed' });
+      }
+    }
+
+    const successCount = results.filter(r => r.success).length;
+    const errorCount = results.length - successCount;
+
+    const response: ApiResponse<{ results: Array<{ id: number; success: boolean; error?: string }> }> = {
+      success: true,
+      data: { results },
+      timestamp: Date.now()
+    };
+
+    return c.json(response);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const errorResponse: ErrorResponse = {
+        success: false,
+        error: 'Validation failed',
+        code: 'VALIDATION_ERROR',
+        details: { errors: error.errors },
+        timestamp: Date.now()
+      };
+      throw createError.badRequest('Validation failed', error.errors);
+    }
+    throw error;
+  }
+});
+
+// 获取单篇文章（参数化路由，必须在具体路径之后定义）
 postRoutes.get('/:id', async (c) => {
   const id = parseInt(c.req.param('id'));
   const user = c.get('user');
@@ -284,38 +446,44 @@ postRoutes.post('/', async (c) => {
       throw createError.conflict('Post with this slug already exists');
     }
 
-    // 自动生成阅读时间（如果未提供）
-    if (!postData.reading_time) {
+    // 自动生成阅读时间（如果未提供或为0）
+    let readingTime = postData.reading_time;
+    if (!readingTime || readingTime === 0) {
       const wordsPerMinute = 200;
       const wordCount = postData.content.split(/\s+/).length;
-      postData.reading_time = Math.ceil(wordCount / wordsPerMinute);
+      readingTime = Math.max(1, Math.ceil(wordCount / wordsPerMinute));
     }
 
     // 插入文章
     const result = await c.env.SHARED_DB.prepare(
       `
       INSERT INTO posts (
-        title, slug, excerpt, content, featured_image, status, category,
+        title, slug, excerpt, content, cover_image, status, category,
         tags, meta_description, meta_keywords, reading_time, is_featured,
         author_id, created_at, updated_at, published_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'), ?)
+      ) VALUES (
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+        datetime('now'),
+        datetime('now'),
+        CASE WHEN ? = 'published' THEN datetime('now') ELSE NULL END
+      )
     `
     )
       .bind(
         postData.title,
         postData.slug,
-        postData.excerpt || '',
+        postData.excerpt,
         postData.content,
-        postData.featured_image || '',
+        postData.cover_image,
         postData.status,
-        postData.category || 'blog',
-        postData.tags || '[]',
-        postData.meta_description || '',
-        postData.meta_keywords || '',
-        postData.reading_time,
+        postData.category,
+        postData.tags,
+        postData.meta_description,
+        postData.meta_keywords,
+        readingTime,
         postData.is_featured ? 1 : 0,
         user.userId,
-        postData.status === 'published' ? new Date().toISOString() : null
+        postData.status
       )
       .run();
 
@@ -404,18 +572,18 @@ postRoutes.put('/:id', async (c) => {
       }
     }
 
-    // 自动生成阅读时间（如果未提供）
-    if (!postData.reading_time) {
+    // 自动生成阅读时间（如果未提供或为0）
+    if (!postData.reading_time || postData.reading_time === 0) {
       const wordsPerMinute = 200;
       const wordCount = postData.content.split(/\s+/).length;
-      postData.reading_time = Math.ceil(wordCount / wordsPerMinute);
+      postData.reading_time = Math.max(1, Math.ceil(wordCount / wordsPerMinute));
     }
 
     // 更新文章
     await c.env.SHARED_DB.prepare(
       `
       UPDATE posts SET
-        title = ?, slug = ?, excerpt = ?, content = ?, featured_image = ?,
+        title = ?, slug = ?, excerpt = ?, content = ?, cover_image = ?,
         status = ?, category = ?, tags = ?, meta_description = ?,
         meta_keywords = ?, reading_time = ?, is_featured = ?,
         updated_at = datetime('now'),
@@ -430,14 +598,14 @@ postRoutes.put('/:id', async (c) => {
       .bind(
         postData.title,
         postData.slug,
-        postData.excerpt || '',
+        postData.excerpt,
         postData.content,
-        postData.featured_image || '',
+        postData.cover_image,
         postData.status,
-        postData.category || 'blog',
-        postData.tags || '[]',
-        postData.meta_description || '',
-        postData.meta_keywords || '',
+        postData.category,
+        postData.tags,
+        postData.meta_description,
+        postData.meta_keywords,
         postData.reading_time,
         postData.is_featured ? 1 : 0,
         id
@@ -529,80 +697,134 @@ postRoutes.delete('/:id', async (c) => {
   return c.json(response);
 });
 
-// 批量操作
-postRoutes.post('/batch', async (c) => {
-  try {
-    const body = await c.req.json();
-    const { action, postIds } = z
-      .object({
-        action: z.enum(['delete', 'publish', 'draft', 'archive']),
-        postIds: z.array(z.number()).min(1)
-      })
-      .parse(body);
+// 切换文章置顶状态
+postRoutes.put('/:id/toggle-top', async (c) => {
+  const id = parseInt(c.req.param('id'));
 
-    const user = c.get('user');
-    const results = [];
-
-    for (const postId of postIds) {
-      try {
-        // 检查权限
-        const canModify = await canAccessResource(c, 'post', postId);
-        if (!canModify) {
-          results.push({ id: postId, success: false, error: 'Permission denied' });
-          continue;
-        }
-
-        // 执行操作
-        let updateQuery = '';
-        switch (action) {
-          case 'delete':
-            updateQuery =
-              'UPDATE posts SET status = "archived", updated_at = datetime("now") WHERE id = ?';
-            break;
-          case 'publish':
-            updateQuery =
-              'UPDATE posts SET status = "published", published_at = datetime("now"), updated_at = datetime("now") WHERE id = ?';
-            break;
-          case 'draft':
-            updateQuery =
-              'UPDATE posts SET status = "draft", updated_at = datetime("now") WHERE id = ?';
-            break;
-          case 'archive':
-            updateQuery =
-              'UPDATE posts SET status = "archived", updated_at = datetime("now") WHERE id = ?';
-            break;
-        }
-
-        await c.env.SHARED_DB.prepare(updateQuery).bind(postId).run();
-        results.push({ id: postId, success: true });
-      } catch (error) {
-        results.push({ id: postId, success: false, error: 'Operation failed' });
-      }
-    }
-
-    const successCount = results.filter(r => r.success).length;
-    const errorCount = results.length - successCount;
-
-    const response: ApiResponse<{ results: Array<{ id: number; success: boolean; error?: string }> }> = {
-      success: true,
-      data: { results },
-      timestamp: Date.now()
-    };
-
-    return c.json(response);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      const errorResponse: ErrorResponse = {
-        success: false,
-        error: 'Validation failed',
-        code: 'VALIDATION_ERROR',
-        details: { errors: error.errors },
-        timestamp: Date.now()
-      };
-      throw createError.badRequest('Validation failed', error.errors);
-    }
-    throw error;
+  if (isNaN(id)) {
+    throw createError.badRequest('Invalid post ID');
   }
+
+  // 检查文章是否存在
+  const existingPost = await c.env.SHARED_DB.prepare(
+    `
+    SELECT id, is_top FROM posts WHERE id = ?
+  `
+  )
+    .bind(id)
+    .first();
+
+  if (!existingPost) {
+    throw createError.notFound('Post not found');
+  }
+
+  // 检查权限
+  const canEdit = await canAccessResource(c, 'post', id);
+  if (!canEdit) {
+    throw createError.forbidden('You do not have permission to modify this post');
+  }
+
+  // 切换置顶状态
+  await c.env.SHARED_DB.prepare(
+    `
+    UPDATE posts
+    SET is_top = CASE WHEN is_top = 1 THEN 0 ELSE 1 END,
+        updated_at = datetime('now')
+    WHERE id = ?
+  `
+  )
+    .bind(id)
+    .run();
+
+  // 获取更新后的文章
+  const updatedPostResult = await c.env.SHARED_DB.prepare(
+    `
+    SELECT
+      p.*,
+      u.username as author_name,
+      u.avatar_url as author_avatar
+    FROM posts p
+    LEFT JOIN users u ON p.author_id = u.id
+    WHERE p.id = ?
+  `
+  )
+    .bind(id)
+    .first();
+
+  const updatedPost = mapDbRowToBlogPost(updatedPostResult);
+
+  const response: ApiResponse<{ post: DashboardBlogPost }> = {
+    success: true,
+    data: { post: updatedPost },
+    timestamp: Date.now()
+  };
+
+  return c.json(response);
+});
+
+// 切换文章推荐状态
+postRoutes.put('/:id/toggle-featured', async (c) => {
+  const id = parseInt(c.req.param('id'));
+
+  if (isNaN(id)) {
+    throw createError.badRequest('Invalid post ID');
+  }
+
+  // 检查文章是否存在
+  const existingPost = await c.env.SHARED_DB.prepare(
+    `
+    SELECT id, is_featured FROM posts WHERE id = ?
+  `
+  )
+    .bind(id)
+    .first();
+
+  if (!existingPost) {
+    throw createError.notFound('Post not found');
+  }
+
+  // 检查权限
+  const canEdit = await canAccessResource(c, 'post', id);
+  if (!canEdit) {
+    throw createError.forbidden('You do not have permission to modify this post');
+  }
+
+  // 切换推荐状态
+  await c.env.SHARED_DB.prepare(
+    `
+    UPDATE posts
+    SET is_featured = CASE WHEN is_featured = 1 THEN 0 ELSE 1 END,
+        updated_at = datetime('now')
+    WHERE id = ?
+  `
+  )
+    .bind(id)
+    .run();
+
+  // 获取更新后的文章
+  const updatedPostResult = await c.env.SHARED_DB.prepare(
+    `
+    SELECT
+      p.*,
+      u.username as author_name,
+      u.avatar_url as author_avatar
+    FROM posts p
+    LEFT JOIN users u ON p.author_id = u.id
+    WHERE p.id = ?
+  `
+  )
+    .bind(id)
+    .first();
+
+  const updatedPost = mapDbRowToBlogPost(updatedPostResult);
+
+  const response: ApiResponse<{ post: DashboardBlogPost }> = {
+    success: true,
+    data: { post: updatedPost },
+    timestamp: Date.now()
+  };
+
+  return c.json(response);
 });
 
 export { postRoutes };

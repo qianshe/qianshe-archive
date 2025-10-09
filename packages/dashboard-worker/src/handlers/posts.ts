@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { createError } from '../middleware/errorHandler';
 import { requireRole, canAccessResource } from '../middleware/auth';
+import { generateSnowflakeId } from '../utils/snowflake';
 import type {
   DashboardBlogPost,
   DashboardEnv,
@@ -124,7 +125,7 @@ function mapDbRowToBlogPost(row: Record<string, unknown>): DashboardBlogPost {
     slug: row.slug as string,
     content: row.content as string,
     excerpt: row.excerpt as string,
-    featured_image: row.cover_image as string,
+    cover_image: row.cover_image as string,
     category: {
       id: parseInt(String(row.category_id)) || 1,
       name: row.category as string,
@@ -139,6 +140,8 @@ function mapDbRowToBlogPost(row: Record<string, unknown>): DashboardBlogPost {
     view_count: row.view_count as number || 0,
     like_count: row.like_count as number || 0,
     comment_count: row.comment_count as number || 0,
+    meta_title: row.meta_title as string || '',
+    meta_description: row.meta_description as string || '',
     published_at: row.published_at as string,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
@@ -454,15 +457,18 @@ postRoutes.post('/', async (c) => {
       readingTime = Math.max(1, Math.ceil(wordCount / wordsPerMinute));
     }
 
+    // 使用雪花算法生成唯一ID
+    const newPostId = generateSnowflakeId();
+
     // 插入文章
-    const result = await c.env.SHARED_DB.prepare(
+    await c.env.SHARED_DB.prepare(
       `
       INSERT INTO posts (
-        title, slug, excerpt, content, cover_image, status, category,
+        id, title, slug, excerpt, content, cover_image, status, category,
         tags, meta_description, meta_keywords, reading_time, is_featured,
         author_id, created_at, updated_at, published_at
       ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
         datetime('now'),
         datetime('now'),
         CASE WHEN ? = 'published' THEN datetime('now') ELSE NULL END
@@ -470,6 +476,7 @@ postRoutes.post('/', async (c) => {
     `
     )
       .bind(
+        newPostId,
         postData.title,
         postData.slug,
         postData.excerpt,
@@ -499,7 +506,7 @@ postRoutes.post('/', async (c) => {
       WHERE p.id = ?
     `
     )
-      .bind(result.meta.last_row_id)
+      .bind(newPostId)
       .first();
 
     const newPost = mapDbRowToBlogPost(newPostResult);

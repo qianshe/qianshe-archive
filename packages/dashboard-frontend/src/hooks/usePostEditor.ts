@@ -47,7 +47,7 @@ const initialFormData: BlogPostRequest = {
   tags: [],
   content: '',
   excerpt: '',
-  featured_image: '',
+  cover_image: '',
   status: 'draft',
   is_featured: false,
   is_top: false,
@@ -92,7 +92,7 @@ export const usePostEditor = (options: UsePostEditorOptions = {}): UsePostEditor
             tags: post.tags,
             content: post.content,
             excerpt: post.excerpt,
-            featured_image: post.featured_image,
+            cover_image: post.cover_image,
             status: post.status,
             is_featured: post.is_featured,
             is_top: post.is_top,
@@ -203,7 +203,7 @@ export const usePostEditor = (options: UsePostEditorOptions = {}): UsePostEditor
         const result = await postsApi.uploadCoverImage(file);
         setFormData(prev => ({
           ...prev,
-          featured_image: result.url
+          cover_image: result.url
         }));
       } catch (err) {
         console.error('Failed to upload image:', err);
@@ -215,7 +215,7 @@ export const usePostEditor = (options: UsePostEditorOptions = {}): UsePostEditor
 
   // 删除封面图片
   const handleRemoveCoverImage = useCallback(() => {
-    setFormData(prev => ({ ...prev, featured_image: '' }));
+    setFormData(prev => ({ ...prev, cover_image: '' }));
   }, []);
 
   // 验证表单

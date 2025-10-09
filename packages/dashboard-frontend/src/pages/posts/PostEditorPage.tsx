@@ -27,7 +27,7 @@ export const PostEditorPage: React.FC = () => {
     tags: [] as string[],
     content: '',
     excerpt: '',
-    featured_image: '',
+    cover_image: '',
     status: 'draft' as 'draft' | 'published' | 'archived',
     is_featured: false,
     is_top: false,
@@ -54,7 +54,7 @@ export const PostEditorPage: React.FC = () => {
             tags: post.tags,
             content: post.content,
             excerpt: post.excerpt ?? '',
-            featured_image: post.featured_image ?? post.cover_image ?? '',
+            cover_image: post.cover_image ?? '',
             status: post.status,
             is_featured: post.is_featured,
             is_top: post.is_top,
@@ -161,7 +161,7 @@ export const PostEditorPage: React.FC = () => {
         const newPost = await postsApi.createPost(postData);
         toast.success('草稿已保存');
         // 创建成功后跳转到编辑模式
-        navigate(`/posts/edit/${newPost.id}`, { replace: true });
+        navigate(`/posts/${newPost.id}/edit`, { replace: true });
       }
 
       setLastSaved(new Date());
@@ -238,7 +238,7 @@ export const PostEditorPage: React.FC = () => {
       const result = await postsApi.uploadCoverImage(file);
       setFormData(prev => ({
         ...prev,
-        featured_image: result.url
+        cover_image: result.url
       }));
       toast.success('图片上传成功', { id: 'upload-image' });
     } catch (error) {
@@ -496,15 +496,15 @@ export const PostEditorPage: React.FC = () => {
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white">封面图片</h3>
               </div>
               <div className="card-body p-4">
-                {formData.featured_image ? (
+                {formData.cover_image ? (
                   <div className="relative">
                     <img
-                      src={formData.featured_image}
+                      src={formData.cover_image}
                       alt="Cover"
                       className="w-full h-40 object-cover rounded-lg"
                     />
                     <button
-                      onClick={() => setFormData(prev => ({ ...prev, featured_image: '' }))}
+                      onClick={() => setFormData(prev => ({ ...prev, cover_image: '' }))}
                       className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
                     >
                       <X className="w-4 h-4" />

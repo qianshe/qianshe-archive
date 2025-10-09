@@ -209,8 +209,10 @@ export const postsApi = {
    * 获取单篇文章
    */
   getPost: async (id: number): Promise<import('../types/blog').BlogPost> => {
-    const response = await apiRequest.get<{ data: import('../types/blog').BlogPost }>(`/posts/${id}`);
-    return response.data;
+    const response = await apiRequest.get<{
+      data: { post: import('../types/blog').BlogPost };
+    }>(`/posts/${id}`);
+    return response.data.post;
   },
 
   /**
@@ -260,8 +262,11 @@ export const postsApi = {
   uploadCoverImage: async (file: File): Promise<{ url: string }> => {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await apiRequest.upload<{ data: { url: string } }>('/posts/upload-cover', formData);
-    return response.data;
+    const response = await apiRequest.upload<{
+      success: boolean;
+      data: { file: { url: string } };
+    }>('/upload', formData);
+    return { url: response.data.file.url };
   },
 
   /**

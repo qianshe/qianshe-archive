@@ -14,8 +14,9 @@ export interface PortfolioEnv {
   CORS_ORIGIN?: string;
   UPLOAD_BUCKET?: R2Bucket;
   CACHE_KV: KVNamespace; // 修正：与 wrangler.toml 中的绑定名称一致
+
+  // 静态资源（新的 assets 配置）
   ASSETS?: Fetcher;
-  __STATIC_CONTENT?: KVNamespace;
 
   // Portfolio 特定
   ENVIRONMENT: 'development' | 'production';

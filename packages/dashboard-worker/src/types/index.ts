@@ -43,8 +43,8 @@ export interface DashboardEnv {
   SESSIONS: KVNamespace;
   SETTINGS?: KVNamespace;
 
-  // 静态资源
-  __STATIC_CONTENT?: KVNamespace;
+  // 静态资源（新的 assets 配置）
+  ASSETS?: Fetcher;
 
   // 队列
   EMAIL_QUEUE?: Queue;

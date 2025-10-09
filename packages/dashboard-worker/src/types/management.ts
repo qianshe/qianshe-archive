@@ -12,7 +12,7 @@ interface BlogPost {
   category: BlogCategory;
   status: BlogStatus;
   tags: string[];
-  featured_image?: string;
+  cover_image?: string;
   meta_title?: string;
   meta_description?: string;
   view_count: number;

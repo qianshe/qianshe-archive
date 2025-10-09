@@ -22,7 +22,7 @@ const projectSchema = z.object({
   slug: z.string().min(1, 'Slug is required').max(200, 'Slug too long'),
   description: z.string().min(1, 'Description is required'),
   content: z.string().min(1, 'Content is required'),
-  featured_image: z.string().url().optional(),
+  cover_image: z.string().url().optional(),
   demo_url: z.string().url().optional(),
   github_url: z.string().url().optional(),
   status: z.enum(['draft', 'published', 'private', 'archived']),
@@ -206,7 +206,7 @@ projectRoutes.post('/', async c => {
     const result = await c.env.DB.prepare(
       `
       INSERT INTO projects (
-        title, slug, description, content, featured_image, demo_url, github_url,
+        title, slug, description, content, cover_image, demo_url, github_url,
         status, category, tags, tech_stack, meta_description, meta_keywords,
         is_featured, sort_order, author_id, created_at, updated_at, published_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'), ?)
@@ -217,7 +217,7 @@ projectRoutes.post('/', async c => {
         projectData.slug,
         projectData.description,
         projectData.content,
-        projectData.featured_image || '',
+        projectData.cover_image || '',
         projectData.demo_url || '',
         projectData.github_url || '',
         projectData.status,
@@ -313,7 +313,7 @@ projectRoutes.put('/:id', async c => {
     await c.env.DB.prepare(
       `
       UPDATE projects SET
-        title = ?, slug = ?, description = ?, content = ?, featured_image = ?,
+        title = ?, slug = ?, description = ?, content = ?, cover_image = ?,
         demo_url = ?, github_url = ?, status = ?, category = ?, tags = ?,
         tech_stack = ?, meta_description = ?, meta_keywords = ?, is_featured = ?,
         sort_order = ?, updated_at = datetime('now'),
@@ -330,7 +330,7 @@ projectRoutes.put('/:id', async c => {
         projectData.slug,
         projectData.description,
         projectData.content,
-        projectData.featured_image || '',
+        projectData.cover_image || '',
         projectData.demo_url || '',
         projectData.github_url || '',
         projectData.status,

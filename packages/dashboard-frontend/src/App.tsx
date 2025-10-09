@@ -17,6 +17,7 @@ import { DashboardPage } from './pages/DashboardPage';
 // 重量级页面 - 懒加载
 const PostsPage = lazy(() => import('./pages/posts/PostsPage').then(m => ({ default: m.PostsPage })));
 const PostEditorPage = lazy(() => import('./pages/posts/PostEditorPage').then(m => ({ default: m.PostEditorPage })));
+const PostPreviewPage = lazy(() => import('./pages/posts/PostPreviewPage').then(m => ({ default: m.PostPreviewPage })));
 const ProjectsPage = lazy(() => import('./pages/projects/ProjectsPage').then(m => ({ default: m.ProjectsPage })));
 const ProjectEditorPage = lazy(() => import('./pages/projects/ProjectEditorPage').then(m => ({ default: m.ProjectEditorPage })));
 const CommentsPage = lazy(() => import('./pages/comments/CommentsPage').then(m => ({ default: m.CommentsPage })));
@@ -98,7 +99,6 @@ function App() {
                       </Suspense>
                     } 
                   />
-
                   {/* 项目管理 */}
                   <Route 
                     path="projects" 
@@ -180,6 +180,17 @@ function App() {
                   />
                 </Route>
 
+                <Route
+                  path="/posts/:id/preview"
+                  element={
+                    <ProtectedRoute>
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <PostPreviewPage />
+                      </Suspense>
+                    </ProtectedRoute>
+                  }
+                />
+
                 {/* 404页面 */}
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
@@ -221,3 +232,6 @@ function App() {
 }
 
 export default App;
+
+
+

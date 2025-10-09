@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { createError } from '../middleware/errorHandler';
-import type { UserRole } from '../types';
+import type { UserRole, DashboardEnv } from '../types';
 
 // 用户类型定义
 type User = {
@@ -12,15 +12,8 @@ type User = {
   userId: number;
 };
 
-type Bindings = {
-  DB: D1Database;
-  JWT_SECRET: string;
-  ADMIN_PASSWORD: string;
-  ENVIRONMENT: string;
-};
-
 const uploadRoutes = new Hono<{
-  Bindings: Bindings;
+  Bindings: DashboardEnv;
   Variables: {
     user: User;
   };
@@ -100,10 +93,10 @@ uploadRoutes.get('/', async c => {
 
     // 获取总数
     const countQuery = `
-      SELECT COUNT(*) as total FROM file_uploads
+      SELECT COUNT(*) as total FROM uploads
       ${whereClause}
     `;
-    const countResult = await c.env.DB.prepare(countQuery)
+    const countResult = await c.env.SHARED_DB.prepare(countQuery)
       .bind(...params)
       .first();
     const total = (countResult as any)?.total || 0;
@@ -113,14 +106,14 @@ uploadRoutes.get('/', async c => {
       SELECT
         f.*,
         u.username as uploader_name
-      FROM file_uploads f
+      FROM uploads f
       LEFT JOIN users u ON f.uploaded_by = u.id
       ${whereClause}
       ORDER BY f.${query.sort_by} ${query.sort_order}
       LIMIT ? OFFSET ?
     `;
 
-    const files = await c.env.DB.prepare(filesQuery)
+    const files = await c.env.SHARED_DB.prepare(filesQuery)
       .bind(...params, query.limit, (query.page - 1) * query.limit)
       .all();
 
@@ -157,7 +150,6 @@ uploadRoutes.post('/', async c => {
     const formData = await c.req.formData();
     const file = formData.get('file') as unknown as File;
     const isPublic = formData.get('is_public') === 'true';
-    const category = (formData.get('category') as string) || '';
 
     if (!file) {
       throw createError.badRequest('No file provided');
@@ -179,18 +171,18 @@ uploadRoutes.post('/', async c => {
     const fileExtension = file.name.split('.').pop() || '';
     const filename = `${timestamp}_${randomId}.${fileExtension}`;
 
-    // 确保uploads目录存在（在实际部署中，这里应该使用云存储服务）
-    // 这里简化处理，将文件存储在内存中或返回模拟的URL
-    const fileUrl = `https://assets.qianshe.top/uploads/${filename}`;
+    // 使用Worker代理URL而不是不存在的域名
+    const origin = new URL(c.req.url).origin;
+    const fileUrl = `${origin}/assets/${filename}`;
     const filePath = `/uploads/${filename}`;
 
     // 保存文件信息到数据库
-    const result = await c.env.DB.prepare(
+    const result = await c.env.SHARED_DB.prepare(
       `
-      INSERT INTO file_uploads (
+      INSERT INTO uploads (
         filename, original_name, mime_type, size, path, url,
-        uploaded_by, is_public, category, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        uploaded_by, is_public, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     `
     )
       .bind(
@@ -201,23 +193,36 @@ uploadRoutes.post('/', async c => {
         filePath,
         fileUrl,
         user.userId,
-        isPublic ? 1 : 0,
-        category
+        isPublic ? 1 : 0
       )
       .run();
 
-    // 在实际应用中，这里应该将文件保存到云存储服务
-    // 例如 Cloudflare R2, AWS S3 等
-    // const fileBuffer = await file.arrayBuffer();
-    // await R2_BUCKET.put(filename, fileBuffer);
+    // 实际上传文件到 R2
+    const fileBuffer = await file.arrayBuffer();
+    
+    // 检查 R2 绑定是否存在
+    if (!c.env.UPLOAD_BUCKET) {
+      throw createError.internal('R2 storage not configured');
+    }
+
+    await c.env.UPLOAD_BUCKET.put(filename, fileBuffer, {
+      httpMetadata: {
+        contentType: file.type,
+      },
+      customMetadata: {
+        originalName: file.name,
+        uploadedBy: user.userId.toString(),
+        uploadedAt: new Date().toISOString(),
+      }
+    });
 
     // 获取保存的文件信息
-    const uploadedFile = await c.env.DB.prepare(
+    const uploadedFile = await c.env.SHARED_DB.prepare(
       `
       SELECT
         f.*,
         u.username as uploader_name
-      FROM file_uploads f
+      FROM uploads f
       LEFT JOIN users u ON f.uploaded_by = u.id
       WHERE f.id = ?
     `
@@ -250,12 +255,12 @@ uploadRoutes.get('/:id', async c => {
     throw createError.badRequest('Invalid file ID');
   }
 
-  const file = await c.env.DB.prepare(
+  const file = await c.env.SHARED_DB.prepare(
     `
     SELECT
       f.*,
       u.username as uploader_name
-    FROM file_uploads f
+    FROM uploads f
     LEFT JOIN users u ON f.uploaded_by = u.id
     WHERE f.id = ?
   `
@@ -289,10 +294,9 @@ uploadRoutes.put('/:id', async c => {
     const user = c.get('user');
     const body = await c.req.json();
 
-    const { is_public, category } = z
+    const { is_public } = z
       .object({
-        is_public: z.boolean().optional(),
-        category: z.string().optional()
+        is_public: z.boolean().optional()
       })
       .parse(body);
 
@@ -301,9 +305,9 @@ uploadRoutes.put('/:id', async c => {
     }
 
     // 检查文件是否存在
-    const existingFile = await c.env.DB.prepare(
+    const existingFile = await c.env.SHARED_DB.prepare(
       `
-      SELECT id, uploaded_by FROM file_uploads WHERE id = ?
+      SELECT id, uploaded_by FROM uploads WHERE id = ?
     `
     )
       .bind(id)
@@ -327,11 +331,6 @@ uploadRoutes.put('/:id', async c => {
       params.push(is_public ? 1 : 0);
     }
 
-    if (category !== undefined) {
-      updates.push('category = ?');
-      params.push(category);
-    }
-
     if (updates.length === 0) {
       throw createError.badRequest('No fields to update');
     }
@@ -339,21 +338,21 @@ uploadRoutes.put('/:id', async c => {
     updates.push('updated_at = datetime("now")');
     params.push(id);
 
-    await c.env.DB.prepare(
+    await c.env.SHARED_DB.prepare(
       `
-      UPDATE file_uploads SET ${updates.join(', ')} WHERE id = ?
+      UPDATE uploads SET ${updates.join(', ')} WHERE id = ?
     `
     )
       .bind(...params)
       .run();
 
     // 获取更新后的文件信息
-    const updatedFile = await c.env.DB.prepare(
+    const updatedFile = await c.env.SHARED_DB.prepare(
       `
       SELECT
         f.*,
         u.username as uploader_name
-      FROM file_uploads f
+      FROM uploads f
       LEFT JOIN users u ON f.uploaded_by = u.id
       WHERE f.id = ?
     `
@@ -383,9 +382,9 @@ uploadRoutes.delete('/:id', async c => {
   }
 
   // 检查文件是否存在
-  const existingFile = await c.env.DB.prepare(
+  const existingFile = await c.env.SHARED_DB.prepare(
     `
-    SELECT id, uploaded_by, filename FROM file_uploads WHERE id = ?
+    SELECT id, uploaded_by, filename FROM uploads WHERE id = ?
   `
   )
     .bind(id)
@@ -401,16 +400,22 @@ uploadRoutes.delete('/:id', async c => {
   }
 
   // 删除数据库记录
-  await c.env.DB.prepare(
+  await c.env.SHARED_DB.prepare(
     `
-    DELETE FROM file_uploads WHERE id = ?
+    DELETE FROM uploads WHERE id = ?
   `
   )
     .bind(id)
     .run();
 
-  // 在实际应用中，这里也应该删除云存储中的文件
-  // await R2_BUCKET.delete((existingFile as any).filename);
+  // 同时删除 R2 中的文件
+  if (c.env.UPLOAD_BUCKET) {
+    try {
+      await c.env.UPLOAD_BUCKET.delete((existingFile as any).filename);
+    } catch (error) {
+      console.error('Failed to delete file from R2:', error);
+    }
+  }
 
   return c.json({
     success: true,
@@ -434,9 +439,9 @@ uploadRoutes.post('/batch-delete', async c => {
     for (const fileId of fileIds) {
       try {
         // 检查文件是否存在和权限
-        const file = await c.env.DB.prepare(
+        const file = await c.env.SHARED_DB.prepare(
           `
-          SELECT id, uploaded_by FROM file_uploads WHERE id = ?
+          SELECT id, uploaded_by FROM uploads WHERE id = ?
         `
         )
           .bind(fileId)
@@ -453,9 +458,9 @@ uploadRoutes.post('/batch-delete', async c => {
         }
 
         // 删除文件
-        await c.env.DB.prepare(
+        await c.env.SHARED_DB.prepare(
           `
-          DELETE FROM file_uploads WHERE id = ?
+          DELETE FROM uploads WHERE id = ?
         `
         )
           .bind(fileId)
@@ -493,7 +498,7 @@ uploadRoutes.get('/stats/overview', async c => {
     params = [user.userId];
   }
 
-  const stats = await c.env.DB.prepare(
+  const stats = await c.env.SHARED_DB.prepare(
     `
     SELECT
       COUNT(*) as total_files,
@@ -504,7 +509,7 @@ uploadRoutes.get('/stats/overview', async c => {
       COUNT(CASE WHEN mime_type LIKE 'application/%' THEN 1 END) as documents,
       COUNT(CASE WHEN created_at >= datetime('now', '-7 days') THEN 1 END) as this_week,
       COUNT(CASE WHEN created_at >= datetime('now', '-30 days') THEN 1 END) as this_month
-    FROM file_uploads
+    FROM uploads
     ${whereClause}
   `
   )

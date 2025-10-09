@@ -5,9 +5,13 @@ main = "src/index.ts"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
-# 静态资源配置
-[site]
-bucket = "./dist"
+# 静态资源配置（新的 assets 配置）
+[observability]
+enabled = true
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
 
 # 生产环境路由配置
 [env.production.routes]

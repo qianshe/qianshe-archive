@@ -17,7 +17,6 @@ export interface BlogPost {
   content: string;
   excerpt?: string;
   cover_image?: string;
-  featured_image?: string; // 后端使用此字段
   author_id: number;
   author_name?: string;
   author_avatar?: string;
@@ -62,7 +61,7 @@ export interface BlogPostRequest {
   tags?: string[]; // 前端使用数组，API层会处理序列化
   content: string;
   excerpt?: string;
-  featured_image?: string;
+  cover_image?: string;
   status: 'draft' | 'published' | 'archived';
   is_featured?: boolean;
   is_top?: boolean;

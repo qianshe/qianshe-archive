@@ -458,7 +458,7 @@ export const PostsPage: React.FC = () => {
                                 >
                                   <button
                                     onClick={() => {
-                                      navigate(`/posts/edit/${post.id}`);
+                                      navigate(`/posts/${post.id}/edit`);
                                       setMenuState(null);
                                     }}
                                     className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -468,7 +468,7 @@ export const PostsPage: React.FC = () => {
                                   </button>
                                   <button
                                     onClick={() => {
-                                      window.open(`/${post.category}/${post.slug}`, '_blank');
+                                      window.open(`${window.location.origin}/posts/${post.id}/preview`, '_blank');
                                       setMenuState(null);
                                     }}
                                     className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -536,7 +536,7 @@ export const PostsPage: React.FC = () => {
                       </div>
                       <div className="flex gap-2 mt-3">
                         <button
-                          onClick={() => navigate(`/posts/edit/${post.id}`)}
+                          onClick={() => navigate(`/posts/${post.id}/edit`)}
                           className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
                         >
                           <Edit2 className="w-3 h-3 mr-1.5" />

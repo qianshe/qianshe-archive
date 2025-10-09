@@ -4,7 +4,6 @@ import { Env } from './types';
 import { CacheManager } from './middleware/cache';
 import { StaticOptimizer, staticMiddleware } from './middleware/static';
 import { ResponseOptimizer } from './middleware/response';
-import { getAssetFromKV } from '@cloudflare/kv-asset-handler';
 
 // 创建性能优化中间件实例
 const createMiddlewareInstances = (env: Env) => {
@@ -99,54 +98,9 @@ app.all('/api/*', async (c) => {
   return apiRoutes.fetch(c.req.raw, c.env, c.executionCtx);
 });
 
-// Legacy code - keeping for reference but commenting out
-/*
-  app.all('/api/*', async c => {
-  const middleware = createMiddlewareInstances(c.env);
-
-  // 设置缓存配置
-  const pathname = new URL(c.req.url).pathname;
-
-  // 根据路径设置不同的缓存策略
-  if (pathname.startsWith('/api/posts')) {
-    if (pathname === '/api/posts' || pathname.includes('/page/')) {
-      c.set('cacheConfig', cacheConfigs.postsList);
-    } else if (pathname.match(/\/api\/posts\/\d+/)) {
-      c.set('cacheConfig', cacheConfigs.postDetail);
-    }
-  } else if (pathname.startsWith('/api/projects')) {
-    if (pathname === '/api/projects' || pathname.includes('/page/')) {
-      c.set('cacheConfig', cacheConfigs.projectsList);
-    } else if (pathname.match(/\/api\/projects\/\d+/)) {
-      c.set('cacheConfig', cacheConfigs.projectDetail);
-    }
-  } else if (pathname.startsWith('/api/comments')) {
-    c.set('cacheConfig', cacheConfigs.commentsList);
-  } else if (pathname.startsWith('/api/settings')) {
-    c.set('cacheConfig', cacheConfigs.settings);
-  }
-
-  // 应用缓存中间件
-  await middleware.cacheMiddleware(c, async () => {
-    // 执行API路由
-    const apiRoutes = createApiRoutes(c.env);
-    const response = await apiRoutes.fetch(c.req.raw, c.env, c);
-
-    // 如果API返回了Response对象，直接返回
-    if (response instanceof Response) {
-      return response;
-    }
-
-    // 否则继续处理
-    return c.json(response);
-  });
-});
-  */
-
-// 静态文件服务 - 处理所有非 API 请求
+// 静态文件服务 - 使用新的 ASSETS 绑定处理所有非 API 请求
 app.get('*', async c => {
-  const url = new URL(c.req.url);
-  const pathname = url.pathname;
+  const pathname = new URL(c.req.url).pathname;
 
   // API 路由已经在前面处理,如果到了这里说明是 404
   if (pathname.startsWith('/api')) {
@@ -160,67 +114,127 @@ app.get('*', async c => {
     );
   }
 
-  // 尝试从 KV 获取静态资源
-  try {
-    // 创建 ExecutionContext
-    const executionContext: ExecutionContext = {
-      waitUntil: (promise: Promise<unknown>) => promise,
-      passThroughOnException: () => {},
-      props: {}
-    };
-
-    const asset = await getAssetFromKV(
-      {
-        request: c.req.raw,
-        waitUntil: (promise: Promise<unknown>) => executionContext.waitUntil(promise)
-      },
-      {
-        ASSET_NAMESPACE: (c.env as any).__STATIC_CONTENT!,
-        ASSET_MANIFEST: {},
-      }
-    );
-
-    // 根据文件类型设置差异化缓存策略
-    const response = new Response(asset.body, asset);
-    const cacheControl = getCacheControlHeader(pathname);
-    response.headers.set('Cache-Control', cacheControl);
-
-    return response;
-  } catch (e) {
-    // 如果找不到资源,返回 index.html (用于 SPA 路由)
+  // 使用新的 ASSETS 绑定服务静态文件
+  if (c.env.ASSETS) {
     try {
-      const executionContext: ExecutionContext = {
-        waitUntil: (promise: Promise<unknown>) => promise,
-        passThroughOnException: () => {},
-        props: {}
-      };
+      const response = await c.env.ASSETS.fetch(c.req.raw);
 
-      const indexAsset = await getAssetFromKV(
-        {
-          request: new Request(`${url.origin}/index.html`, c.req.raw),
-          waitUntil: (promise: Promise<unknown>) => executionContext.waitUntil(promise)
-        },
-        {
-          ASSET_NAMESPACE: (c.env as any).__STATIC_CONTENT!,
-          ASSET_MANIFEST: {},
-        }
-      );
+      // 添加差异化缓存策略
+      const newResponse = new Response(response.body, response);
+      const cacheControl = getCacheControlHeader(pathname);
+      newResponse.headers.set('Cache-Control', cacheControl);
 
-      const response = new Response(indexAsset.body, indexAsset);
-      response.headers.set('Content-Type', 'text/html');
-      
-      return response;
-    } catch (indexError) {
-      return c.json(
-        {
-          success: false,
-          error: 'Page not found',
-          message: 'The requested resource was not found'
-        },
-        404
-      );
+      if (c.env.ENVIRONMENT === 'development') {
+        console.log(`[Static Assets] Served: ${pathname}`);
+      }
+
+      return newResponse;
+    } catch (error) {
+      // 对于 SPA，404 时返回 index.html
+      try {
+        const indexRequest = new Request(new URL('/index.html', c.req.url).toString(), c.req.raw);
+        const indexResponse = await c.env.ASSETS.fetch(indexRequest);
+        const newResponse = new Response(indexResponse.body, indexResponse);
+        newResponse.headers.set('Content-Type', 'text/html');
+        return newResponse;
+      } catch (indexError) {
+        console.error('Failed to serve static assets:', error);
+        return c.json(
+          {
+            success: false,
+            error: 'Page not found',
+            message: 'The requested resource was not found'
+          },
+          404
+        );
+      }
     }
   }
+
+  // 如果 ASSETS 绑定不可用（本地开发）
+  if (c.env.ENVIRONMENT === 'development') {
+    return c.html(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Portfolio - 开发环境配置</title>
+          <style>
+            body {
+              font-family: system-ui, -apple-system, sans-serif;
+              max-width: 800px;
+              margin: 50px auto;
+              padding: 20px;
+              line-height: 1.6;
+            }
+            .error {
+              background: #fee;
+              border: 1px solid #fcc;
+              border-radius: 8px;
+              padding: 20px;
+              margin: 20px 0;
+            }
+            .solution {
+              background: #efe;
+              border: 1px solid #cfc;
+              border-radius: 8px;
+              padding: 20px;
+              margin: 20px 0;
+            }
+            code {
+              background: #f5f5f5;
+              padding: 2px 6px;
+              border-radius: 3px;
+            }
+            pre {
+              background: #f5f5f5;
+              padding: 15px;
+              border-radius: 5px;
+              overflow-x: auto;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>⚠️ 静态资源服务未配置</h1>
+
+          <div class="error">
+            <h3>问题</h3>
+            <p>ASSETS 绑定未初始化。请确保前端已构建且配置正确。</p>
+            <p>请求路径: <code>${pathname}</code></p>
+          </div>
+
+          <div class="solution">
+            <h3>✅ 解决方案 1：构建前端</h3>
+            <pre>cd ../portfolio-frontend && npm run build</pre>
+            <p>然后重启 Worker 开发服务器：</p>
+            <pre>npm run dev</pre>
+          </div>
+
+          <div class="solution">
+            <h3>✅ 解决方案 2：使用前后端分离开发</h3>
+            <pre>
+# 终端 1：前端开发服务器
+cd packages/portfolio-frontend
+npm run dev  # http://localhost:5173
+
+# 终端 2：Worker API 服务器
+cd packages/portfolio-worker
+npm run dev  # http://localhost:8787
+            </pre>
+          </div>
+        </body>
+      </html>
+    `, 503);
+  }
+
+  return c.json(
+    {
+      success: false,
+      error: 'Static assets not configured',
+      message: 'Static assets binding is not configured'
+    },
+    503
+  );
 });
 
 // 增强的错误处理

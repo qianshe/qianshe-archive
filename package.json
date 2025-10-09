@@ -8,12 +8,9 @@
     "packages/*"
   ],
   "scripts": {
-    "install:all": "npm install",
-    "build:all": "npm run build --workspaces --if-present",
     "build:frontends": "npm run build -w packages/dashboard-frontend -w packages/portfolio-frontend",
-    "build:workers": "npm run build -w packages/dashboard-worker -w packages/portfolio-worker",
-    "build:portfolio": "npm run build -w packages/portfolio-frontend && npm run build -w packages/portfolio-worker",
-    "build:dashboard": "npm run build -w packages/dashboard-frontend && npm run build -w packages/dashboard-worker",
+    "build:portfolio": "npm run build -w packages/portfolio-frontend",
+    "build:dashboard": "npm run build -w packages/dashboard-frontend",
     "dev:portfolio": "npm run dev -w packages/portfolio-worker",
     "dev:dashboard": "npm run dev -w packages/dashboard-worker",
     "deploy": "node deploy.js",
@@ -25,16 +22,14 @@
     "logs:portfolio": "cd packages/portfolio-worker && npx wrangler tail",
     "logs:dashboard": "cd packages/dashboard-worker && npx wrangler tail",
     "clean": "npm run clean --workspaces --if-present",
-    "setup": "npm install && npm run init:db",
+    "setup": "npm install",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint:all": "npm run lint && npm run format:check",
     "type-check": "npm run type-check --workspaces --if-present",
-    "test": "echo \"No tests configured yet\"",
-    "pre-commit": "npm run lint:all",
-    "quality-check": "npm run lint:all && npm run build:all"
+    "quality-check": "npm run lint:all && npm run build:frontends"
   },
   "keywords": [
     "blog",

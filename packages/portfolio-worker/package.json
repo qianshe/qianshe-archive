@@ -4,7 +4,7 @@
   "description": "Cloudflare Worker for portfolio public API and static hosting",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "wrangler dev --port 8787 --local --persist -c wrangler.local.toml",
+    "dev": "wrangler dev --port 8787 --local -c wrangler.local.toml",
     "build": "tsc",
     "build:frontend": "cd ../frontend && npm run build",
     "deploy": "npm run build:frontend && wrangler deploy",
